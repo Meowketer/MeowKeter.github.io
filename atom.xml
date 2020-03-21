@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://meowketer.github.io/</id>
-    <title>Winghr&apos;Blog</title>
-    <updated>2020-03-21T14:08:42.325Z</updated>
+    <title>Winghr&apos;s Blog</title>
+    <updated>2020-03-21T14:40:41.248Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://meowketer.github.io/"/>
     <link rel="self" href="https://meowketer.github.io/atom.xml"/>
     <subtitle>十日画一水，五日画一圆。</subtitle>
     <logo>https://meowketer.github.io/images/avatar.png</logo>
     <icon>https://meowketer.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2020, Winghr&apos;Blog</rights>
+    <rights>All rights reserved 2020, Winghr&apos;s Blog</rights>
     <entry>
         <title type="html"><![CDATA[Hello Gridea]]></title>
         <id>https://meowketer.github.io/post/hello-gridea/</id>
