@@ -6,7 +6,7 @@
 <meta HTTP-EQUIV="pragma" CONTENT="no-cache"> 
 <meta HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
 <meta HTTP-EQUIV="expires" CONTENT="0"> 
-<title>写博客：记录，分享&amp;收获 | Winghr&#39;s Blog</title>	
+<title>XCTF-pwn-stack2 - Writeup | Winghr&#39;s Blog</title>	
 
 <link rel="stylesheet" href="https://meowketer.github.io//styles/main.css">
 <script type="text/javascript">
@@ -142,10 +142,10 @@ window.onload=getCSS();
 	
 	                      
 		<div class="entry-content">
-			<h1 class="wow swing entry-title">写博客：记录，分享&amp;收获</h1>
+			<h1 class="wow swing entry-title">XCTF-pwn-stack2 - Writeup</h1>
 <div class="entry-meta">
 <div class="wow bounce">
-	<i class="iconfont icon-rili"> <time class="lately-a" datetime="2019-07-29 00:09:41" itemprop="datePublished" pubdate="">2019-07-29</time></i>
+	<i class="iconfont icon-rili"> <time class="lately-a" datetime="2019-11-28 22:35:55" itemprop="datePublished" pubdate="">2019-11-28</time></i>
 	          </div>
 			
 </span>
@@ -153,53 +153,48 @@ window.onload=getCSS();
 		</div>
                   
 			<div class="wow slideInLeft entry-summary song">
-				<p><ul class="markdownIt-TOC">
-<li><a href="#%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2">第一篇博客</a>
-<ul>
-<li><a href="#%E5%85%B3%E4%BA%8E%E6%88%91">关于我</a></li>
-<li><a href="#%E9%80%89%E6%8B%A9">选择</a></li>
-<li><a href="#%E6%88%91%E7%9A%84%E5%8D%9A%E5%AE%A2">我的博客</a></li>
-</ul>
-</li>
-</ul>
-(对待博客的认识&amp;准备)</p>
-<h1 id="第一篇博客">第一篇博客</h1>
-<p>在这之前我从来没有认真写过博客，对于博客虽然很早就有听说过，但是对它的概念一直很模糊。</p>
-<p>直到前不久，我意识到无论是在生活中还是在学习技术的过程中，有太多的想法与细节需要放到一个地方做总结与整合。它的作用不仅仅只是记录。更多的是一种分享，尤其是技术方面而言。在我学习的过程中查阅过的大量资料，这便是有过前车之鉴的朋友们所做的知识整合与分享。</p>
-<p>如果有人问我为什么也要准备开始分享自己花费不少时间一点点摸索一点点积累的一些知识呢？我会毫不犹豫的回答到，在我学习的过程中本就是借鉴了其他人大量的分享，正因为有着许多人共同的分享，才使得相关领域的技术以及知识不断的向前更新迈步。也正因为我们踩着巨人的肩膀所以我们一直有收获与进步~</p>
-<p>所以，博客便是这样一个记录与分享的平台。我的分享与记录也便从此开始~<br>
-开始慢慢的写文章（虽然没有啥文笔可言）开始点滴记录我所走过的坑（虽然技术菜的一批）开始分享我的经验（虽然现在一点经验都没有）开始追逐大佬们的步伐（这个是真的诶！！）</p>
-<h2 id="关于我">关于我</h2>
-<p>大家好，我是Winghr</p>
+				<h3 id="偶尔在学习的阶段慢慢发现的进步-抽空写点笔记记录一下子">偶尔在学习的阶段慢慢发现的进步 抽空写点笔记记录一下子</h3>
 <hr>
-<p>关于我<br>
-大概在四五年前第一次接触到黑客这样的名词，，感觉什么远控啊，攻击其他人的网站啊还有满屏的五颜六色的代码啊啥的感觉太帅惹~~~（现在想想真的好沙雕）</p>
-<p>但由于当时只是好奇、加上学业繁重，，并没有形成多浓厚的兴趣便一直处于好奇的阶段，在两年前的一天把好奇转为了兴趣，于是慢慢踏入了信息安全的大门，在两年的时间内没有啥方向一直就是这儿学点儿那学点儿的，虽然了解了很多但是没有啥精通一点的东东。</p>
-<p>后来有幸认识了一个相关行业的导师跟他交流了很多，了解到在信息安全领域中，像是我这样前期找不到方向便去多方面的“但当涉猎”也是有好处滴，因为信息安全的领域很大要学习和努力的地方本就很多。so.在找到一个确切方向之前我还是会学习很多知识，尤其是最基础的一些东东。</p>
-<h2 id="选择">选择</h2>
-<p>在一个月前我慢慢发现我对于很多知识点的整理与积累不够系统，有些知识的整合例如CTF练习题的wp放在了文件夹中，有些像是二进制汇编等知识的学习笔记放在了jupyter笔记本中，也有一些文章写在了一些论坛中。</p>
-<p>有看过很多大佬写的关于博客的文章，例如：为什么要写博客，，，写博客的种种好处。。。。嗯，，说的很对，让我有好多的收获。<br>
-总结来讲就是记录，分享以及收获~</p>
-<p>记录一些好的点子以及技术细节，分享你的经验与研究成果，收获一份意义与价值。</p>
-<h2 id="我的博客">我的博客</h2>
-<p>在写这些文章的过程，我会经历回顾整理知识的阶段，能在中国阶段中获得对知识巩固与更深的理解。这本是一种收获。<br>
-如果我的分享能给他人带来一些帮助，解决一些问题，我的这份分享便也会有一份意义咯，这也是一份沉淀的收获把~</p>
-<p>所以即便我的博客没有一个人看，我也会坚持去写，，因为总有一天会通过这一点点的积累收获很多很多~</p>
+<p>这次做的题目还是栈溢出漏洞的题目但是并没用用到payload，简单用了下ROP</p>
+<h2 id="题目描述">题目描述</h2>
+<p>除了一个名称 stack2   题目描述是：暂无</p>
+<p>下载附件运行一下看看流程<br>
+<img src="https://img-blog.csdnimg.cn/20191128204952145.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+保护开启了nx 和canary<br>
+流程大概是提供了4个选项的功能：加数、改数还有求平均数啥的。<br>
+然后丢到iad里看一下这部分的流程简单分析一下漏洞点。<br>
+<img src="https://img-blog.csdnimg.cn/20191128205400453.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+在这里看还是蛮正常的，继续向下看功能模块：<br>
+<img src="https://img-blog.csdnimg.cn/20191128205647845.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+在这里可以看到三号选项的功能模块对输入的数值没有做任何限制<br>
+没有检查输入数组的边界就意味着可以任意输入<br>
+因此在这里造成栈溢出而劫持eip<br>
+然后就大概有接下来的思路了：寻找或者构造system(&quot;/bin/sh&quot;)来控制程序流程获取shell。<br>
+<img src="https://img-blog.csdnimg.cn/20191128210615849.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+system在plt表中的地址为0x8048450<br>
+<img src="https://img-blog.csdnimg.cn/20191128210846175.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+程序中没有/bin/sh 但是找到了这个个东东 但是/bin/bash 中的bash是不能调用bash命令的，所以在这里构造system(sh)一样能完成调用<br>
+sh所在的地址位0x8048980 + 7 （空过前面的/bin/ba 读取sh）<br>
+计算漏洞点在栈中的偏移，从返回地址retn到输入的地方偏移为0x84</p>
+<h1 id="exp">exp:</h1>
+<p><img src="https://img-blog.csdnimg.cn/20191128211704415.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+跑一下成功得到shell<br>
+<img src="https://img-blog.csdnimg.cn/20191128211946403.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"></p>
 
 							</div>
 	<div class="wow bounceInDown vt-post-tags">
  
-				<a href="https://meowketer.github.io/tag/fBtHb5Xc_/" rel="tag">旧文章</a>	
+				<a href="https://meowketer.github.io/tag/H5tJBBzum/" rel="tag">CTF</a>	
 				 
 					</div>						
 <nav class="navigation3 post-navigation3" role="navigation">
 		
 		<div class="nav-links3">
       
-		<div class="wow bounceInLeft nav-previous3"><a href="https://meowketer.github.io/post/jinzhishang/" rel="prev"> 编程学习基础－－进制学习笔记整理（上）</a></div>
+		<div class="wow bounceInLeft nav-previous3"><a href="https://meowketer.github.io/post/sctf_2016/" rel="prev"> sctf_2016</a></div>
 		 
 		 
-		<div class="wow bounceInRight nav-next3"><a href="https://meowketer.github.io/post/hello-gridea/" rel="next"> Hello Gridea</a></div>
+		<div class="wow bounceInRight nav-next3"><a href="https://meowketer.github.io/post/life1/" rel="next"> 过去的一个月干了些啥？</a></div>
 		
 		</div>
 	</nav>

@@ -6,7 +6,7 @@
 <meta HTTP-EQUIV="pragma" CONTENT="no-cache"> 
 <meta HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
 <meta HTTP-EQUIV="expires" CONTENT="0"> 
-<title>写博客：记录，分享&amp;收获 | Winghr&#39;s Blog</title>	
+<title>shellcode相关知识整理 | Winghr&#39;s Blog</title>	
 
 <link rel="stylesheet" href="https://meowketer.github.io//styles/main.css">
 <script type="text/javascript">
@@ -142,10 +142,10 @@ window.onload=getCSS();
 	
 	                      
 		<div class="entry-content">
-			<h1 class="wow swing entry-title">写博客：记录，分享&amp;收获</h1>
+			<h1 class="wow swing entry-title">shellcode相关知识整理</h1>
 <div class="entry-meta">
 <div class="wow bounce">
-	<i class="iconfont icon-rili"> <time class="lately-a" datetime="2019-07-29 00:09:41" itemprop="datePublished" pubdate="">2019-07-29</time></i>
+	<i class="iconfont icon-rili"> <time class="lately-a" datetime="2020-01-28 23:21:30" itemprop="datePublished" pubdate="">2020-01-28</time></i>
 	          </div>
 			
 </span>
@@ -153,53 +153,69 @@ window.onload=getCSS();
 		</div>
                   
 			<div class="wow slideInLeft entry-summary song">
-				<p><ul class="markdownIt-TOC">
-<li><a href="#%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2">第一篇博客</a>
-<ul>
-<li><a href="#%E5%85%B3%E4%BA%8E%E6%88%91">关于我</a></li>
-<li><a href="#%E9%80%89%E6%8B%A9">选择</a></li>
-<li><a href="#%E6%88%91%E7%9A%84%E5%8D%9A%E5%AE%A2">我的博客</a></li>
-</ul>
-</li>
-</ul>
-(对待博客的认识&amp;准备)</p>
-<h1 id="第一篇博客">第一篇博客</h1>
-<p>在这之前我从来没有认真写过博客，对于博客虽然很早就有听说过，但是对它的概念一直很模糊。</p>
-<p>直到前不久，我意识到无论是在生活中还是在学习技术的过程中，有太多的想法与细节需要放到一个地方做总结与整合。它的作用不仅仅只是记录。更多的是一种分享，尤其是技术方面而言。在我学习的过程中查阅过的大量资料，这便是有过前车之鉴的朋友们所做的知识整合与分享。</p>
-<p>如果有人问我为什么也要准备开始分享自己花费不少时间一点点摸索一点点积累的一些知识呢？我会毫不犹豫的回答到，在我学习的过程中本就是借鉴了其他人大量的分享，正因为有着许多人共同的分享，才使得相关领域的技术以及知识不断的向前更新迈步。也正因为我们踩着巨人的肩膀所以我们一直有收获与进步~</p>
-<p>所以，博客便是这样一个记录与分享的平台。我的分享与记录也便从此开始~<br>
-开始慢慢的写文章（虽然没有啥文笔可言）开始点滴记录我所走过的坑（虽然技术菜的一批）开始分享我的经验（虽然现在一点经验都没有）开始追逐大佬们的步伐（这个是真的诶！！）</p>
-<h2 id="关于我">关于我</h2>
-<p>大家好，我是Winghr</p>
-<hr>
-<p>关于我<br>
-大概在四五年前第一次接触到黑客这样的名词，，感觉什么远控啊，攻击其他人的网站啊还有满屏的五颜六色的代码啊啥的感觉太帅惹~~~（现在想想真的好沙雕）</p>
-<p>但由于当时只是好奇、加上学业繁重，，并没有形成多浓厚的兴趣便一直处于好奇的阶段，在两年前的一天把好奇转为了兴趣，于是慢慢踏入了信息安全的大门，在两年的时间内没有啥方向一直就是这儿学点儿那学点儿的，虽然了解了很多但是没有啥精通一点的东东。</p>
-<p>后来有幸认识了一个相关行业的导师跟他交流了很多，了解到在信息安全领域中，像是我这样前期找不到方向便去多方面的“但当涉猎”也是有好处滴，因为信息安全的领域很大要学习和努力的地方本就很多。so.在找到一个确切方向之前我还是会学习很多知识，尤其是最基础的一些东东。</p>
-<h2 id="选择">选择</h2>
-<p>在一个月前我慢慢发现我对于很多知识点的整理与积累不够系统，有些知识的整合例如CTF练习题的wp放在了文件夹中，有些像是二进制汇编等知识的学习笔记放在了jupyter笔记本中，也有一些文章写在了一些论坛中。</p>
-<p>有看过很多大佬写的关于博客的文章，例如：为什么要写博客，，，写博客的种种好处。。。。嗯，，说的很对，让我有好多的收获。<br>
-总结来讲就是记录，分享以及收获~</p>
-<p>记录一些好的点子以及技术细节，分享你的经验与研究成果，收获一份意义与价值。</p>
-<h2 id="我的博客">我的博客</h2>
-<p>在写这些文章的过程，我会经历回顾整理知识的阶段，能在中国阶段中获得对知识巩固与更深的理解。这本是一种收获。<br>
-如果我的分享能给他人带来一些帮助，解决一些问题，我的这份分享便也会有一份意义咯，这也是一份沉淀的收获把~</p>
-<p>所以即便我的博客没有一个人看，我也会坚持去写，，因为总有一天会通过这一点点的积累收获很多很多~</p>
+				<h2 id="0x1概述">0x1概述</h2>
+<p>shellcode是binary堆栈溢出中常见的一种利用手段。顾名思义，shell指的就是Linux里用户与内核进行交互操作的一种接口，它通常具备一定的访问控制权限。code则是表示一段代码。合起来shellcode便有着恶意代码的意思。<br>
+在存在一些漏洞的程序上使用shellcode很多情景下会对程序甚至系统产生严重的危害。例如非法完成系统调用，打开一个远程设备的shell。劫持程序的控制流读取一些路径下的文件数据。以及完成关机命令系统的调用等等。<br>
+在反复对栈溢出进行学习的过程接触了shellcode相关的一些知识，俗话说得好：好记性不如烂笔头。抽空对学过的知识进行总结总是好的。</p>
+<h2 id="0x2-shellcode原理">0x2 shellcode原理</h2>
+<p>从binary底层的角度出发，所有的程序运行的代码最终都转化为二进制的0和1在CPU中运算而实现的。二进制0.1代码向上层整合为机器码、汇编语言、以及开发时使用的高级语言。在这里我们在汇编的部分进行实验观察，来探寻一下shellcode在底层的原理，先整过来一段shellcode瞅瞅看：</p>
+<pre><code class="language-bash">shellcode = &quot;\x31\xc0\x31\xdb\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\x31\
+xd2\xb0\x0b\x51\x52\x55\x89\xe5\x0f\x34\x31\xc0\x31\xdb\xfe\xc0\x51\x52\x55\x89\xe5\x0f\x34&quot;
+</code></pre>
+<p>这些16进制的字符串叫做opcode。opcode由最多6个域组成，是和汇编指令对于的机器码。<br>
+这段机器码对应的汇编为：</p>
+<pre><code class="language-bash">asm {                           
+  global _start
+  _start:
+  xor eax,eax   //eax置0
+  xor edx,edx   //edx置0
+  push edx
+  push &quot;/sh&quot;
+  push &quot;/bin&quot;   //将/bin/sh入栈
+  mov ebx,esp   //ebx指向/bin/sh这个字符串
+  xor ecx,ecx
+  mov al,0Bh    //eax置为execve函数的中断号
+  int 80h       //调用软中断
+}
+</code></pre>
+<p>在这段汇编当中对应完成的就是完成一次系统调用：打开一个/bin/bash 的shell</p>
+<h2 id="0x4系统调用">0x4系统调用</h2>
+<p>在上面shellcode的原理部分提到了系统调用。在这儿我们具体看看系统调用是啥：<br>
+首先贴一个网站：<a href="http://syscalls.kernelgrok.com/">http://syscalls.kernelgrok.com/</a><br>
+<img src="https://img-blog.csdnimg.cn/20200128213427243.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+在这里我们可以看到sys_execve编号的系统调用在寄存器中的具体格式是这样的<br>
+1.将系统调用号传到eax中。<br>
+2.ebx用于保存函数调用的第一个参数（ecx存放第二个参数，edx存放第三个参数，esi存放第四个参数，edi存放第五个参数）<br>
+3.ecx与edx的值应相等。<br>
+4.调用int 0x80 汇编指令来出发系统软中断，强迫内核暂停手头上的工作并处理该中断。<br>
+此时对应我们上文的汇编指令就很清晰了：EAX = 0xb = 11，EBX = &amp;(“/bin//sh”), ECX = EDX = 0，再调用int 0x80 ,即执行了sys_execve(&quot;/bin//sh&quot;, 0, 0, 0)从而完成系统调用。</p>
+<h2 id="0x5-一次直观的shellcode使用">0x5 一次直观的shellcode使用</h2>
+<p><img src="https://img-blog.csdnimg.cn/20200128223400774.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+在这里我们通过向一个binary程序栈溢出后在其中的一块bss段写入一段shellcode可以看到它执行了系统调用并打开了程序所在系统的shell拥有root权限可使用bash命令进行对系统例如文件遍历的操作。</p>
+<h2 id="0x6-shellcode的伪装">0x6 shellcode的伪装</h2>
+<p>在很多情况下，shellcode是无法想当然就能任意达到使用条件的。例如程序使用scanf函数来获取一段char类型的字符串，将这段字符串则遇到&quot;\0&quot;就会截断转到对应的地址。再例如通过输入函数读入的数据有格式限制或者输入内容通过其他的功能函数转化为其他字符串类型。都会造成我们的shellcode失效。在这里主要的问题如下：存在有输入限制的功能模块使得一些字符被过滤无法继续组成原本shellcode的情况。这就需要对shellcode进行处理：<br>
+在这儿我们使用kali下的msfvenom这个msf框架下的一个工具。<br>
+<img src="https://img-blog.csdnimg.cn/20200128230640377.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+我们可以通过对应的参数来选择适合的，符合相关条件的编码参数。例如我们要过滤有\0x00字符的内容。<br>
+接下来我们来尝试绕过限制输入只能是base编码限制的情况下对shellcode进行编码：<br>
+<img src="https://img-blog.csdnimg.cn/20200128232844712.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+这样我们就可以将一段机器码转化为base64的格式<br>
+<img src="https://img-blog.csdnimg.cn/20200128233019835.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+在这个程序中可以看到我们输入的buf会转化为base64格式后转化成函数指针调用执行。<br>
+这里我们可以将刚刚的那段shellcode输入看能否获取shell:<br>
+<img src="https://img-blog.csdnimg.cn/20200128234317576.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
+这儿充分说明shellcode的格式在一些情况下需要进行编码调整来完成‘’伪装‘’。</p>
 
 							</div>
 	<div class="wow bounceInDown vt-post-tags">
  
-				<a href="https://meowketer.github.io/tag/fBtHb5Xc_/" rel="tag">旧文章</a>	
-				 
 					</div>						
 <nav class="navigation3 post-navigation3" role="navigation">
 		
 		<div class="nav-links3">
       
-		<div class="wow bounceInLeft nav-previous3"><a href="https://meowketer.github.io/post/jinzhishang/" rel="prev"> 编程学习基础－－进制学习笔记整理（上）</a></div>
 		 
-		 
-		<div class="wow bounceInRight nav-next3"><a href="https://meowketer.github.io/post/hello-gridea/" rel="next"> Hello Gridea</a></div>
+		<div class="wow bounceInRight nav-next3"><a href="https://meowketer.github.io/post/test/" rel="next"> Test</a></div>
 		
 		</div>
 	</nav>
