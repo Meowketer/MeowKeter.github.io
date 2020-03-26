@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://winghr.i0x0.cn</id>
+    <id>https://meowketer.github.io</id>
     <title>Winghr&apos;s Blog</title>
-    <updated>2020-03-26T15:47:58.872Z</updated>
+    <updated>2020-03-26T15:55:39.639Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
-    <link rel="alternate" href="https://winghr.i0x0.cn"/>
-    <link rel="self" href="https://winghr.i0x0.cn/atom.xml"/>
+    <link rel="alternate" href="https://meowketer.github.io"/>
+    <link rel="self" href="https://meowketer.github.io/atom.xml"/>
     <subtitle>十日画一水，五日画一圆。</subtitle>
-    <logo>https://winghr.i0x0.cn/images/avatar.png</logo>
-    <icon>https://winghr.i0x0.cn/favicon.ico</icon>
+    <logo>https://meowketer.github.io/images/avatar.png</logo>
+    <icon>https://meowketer.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, Winghr&apos;s Blog</rights>
     <entry>
         <title type="html"><![CDATA[有关ret2libc利用方法的整理]]></title>
-        <id>https://winghr.i0x0.cn/post/p=1/</id>
-        <link href="https://winghr.i0x0.cn/post/p=1/">
+        <id>https://meowketer.github.io/post/p=1/</id>
+        <link href="https://meowketer.github.io/post/p=1/">
         </link>
         <updated>2020-03-26T13:33:13.000Z</updated>
         <content type="html"><![CDATA[<p>ret2libc是栈溢出漏洞利用的一种常见手段。这种漏洞利用方式结合了很多利用方法及系统机制，如ROP技术、linux延迟绑定机制等。本文结合近期练习的几道ret2libc漏洞CTF题目，归纳其利用的过程。</p>
@@ -26,18 +26,18 @@
 1、用来存放外部函数地址的数据段<br>
 2、用来获取数据段记录的外部函数地址的代码<br>
 对应有两个表，一个用来存放外部的函数地址的数据表称为全局偏移表（GOT, Global Offset Table），那个存放额外代码的表称为程序链接表（PLT，Procedure Link Table）<br>
-<img src="https://winghr.i0x0.cn/post-images/1585232895786.jpeg" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1585232895786.jpeg" alt="" loading="lazy"><br>
 可执行文件里面保存的是 PLT 表的地址，对应 PLT 地址指向的是 GOT 的地址，GOT 表指向的就是 glibc 中的地址<br>
 那我们可以发现，在这里面想要通过 plt 表获取函数的地址，首先要保证 got 表已经获取了正确的地址，但是在一开始就进行所有函数的重定位是比较麻烦的，为此，linux 引入了延迟绑定机制</p>
 <h3 id="延迟绑定机制">延迟绑定机制</h3>
 <p>只有动态库函数在被调用时，才会地址解析和重定位工作。简单来讲，在一个binary运行的过程中，只有真正运行过的函数才真正被调用真实地址运行。当一个功能模块未被加载使用的时候，比如准备调用一个函数，会通过先在PLT表找到记录相对的GOT表项的内容，即可跳转真实地址运行调用函数。也就是所谓的地址解析和重定位。</p>
 <h2 id="一个实例">一个实例</h2>
 <p>在上面整理了相关的理论原理，通过下面的这道题目来对应实践上述内容。这个binary来自BUUOJ的ciscn_2019_c_1难度不大，刚刚好是re2libc的利用漏洞。<br>
-<img src="https://winghr.i0x0.cn/post-images/1585234609391.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1585234609391.png" alt="" loading="lazy"><br>
 程序根据不同的选项有不同的功能，载入ida中查看一下：<br>
-<img src="https://winghr.i0x0.cn/post-images/1585234863292.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1585234863292.png" alt="" loading="lazy"><br>
 可以看到在encrypt函数内存在栈溢出漏洞。对应程序的功能选项则为1选项。<br>
-<img src="https://winghr.i0x0.cn/post-images/1585235183513.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1585235183513.png" alt="" loading="lazy"><br>
 但是这里的算法会将我们输入的内容加密处理，这样我们构造payload时就无法直接实现我们攻击流程。所以第一步需要对这个算法进行处理。在这个算法中注意到strlen函数，这个函数的主要特性如下：strlen所作的是一个计数器的工作，它从内存的某个位置（可以是字符串开头，中间某个位置，甚至是某个不确定的内存区域）开始扫描，直到碰到第一个字符串结束符'\0'为止，然后返回计数器值(长度不包含'\0')。因此在这里我们只需要在payload开始的部分加入'\0'字符即可完成绕过。<br>
 还有一个需要注意的点就是，程序远程运行在乌班图18.04的环境下，因此在构造系统调用时需要使用ret先对齐。</p>
 <h2 id="利用思路">利用思路</h2>
@@ -98,8 +98,8 @@ io.interactive()
     </entry>
     <entry>
         <title type="html"><![CDATA[shellcode相关知识整理]]></title>
-        <id>https://winghr.i0x0.cn/post/shellcode/</id>
-        <link href="https://winghr.i0x0.cn/post/shellcode/">
+        <id>https://meowketer.github.io/post/shellcode/</id>
+        <link href="https://meowketer.github.io/post/shellcode/">
         </link>
         <updated>2020-01-28T15:21:30.000Z</updated>
         <content type="html"><![CDATA[<h2 id="0x1概述">0x1概述</h2>
@@ -158,32 +158,32 @@ xd2\xb0\x0b\x51\x52\x55\x89\xe5\x0f\x34\x31\xc0\x31\xdb\xfe\xc0\x51\x52\x55\x89\
     </entry>
     <entry>
         <title type="html"><![CDATA[Test]]></title>
-        <id>https://winghr.i0x0.cn/post/test/</id>
-        <link href="https://winghr.i0x0.cn/post/test/">
+        <id>https://meowketer.github.io/post/test/</id>
+        <link href="https://meowketer.github.io/post/test/">
         </link>
         <updated>2019-12-21T15:31:00.000Z</updated>
-        <content type="html"><![CDATA[<p>测试格式🤠<img src="https://winghr.i0x0.cn/post-images/1584804700063.jpg" alt="" loading="lazy"></p>
+        <content type="html"><![CDATA[<p>测试格式🤠<img src="https://meowketer.github.io/post-images/1584804700063.jpg" alt="" loading="lazy"></p>
 ]]></content>
     </entry>
     <entry>
         <title type="html"><![CDATA[sctf_2016]]></title>
-        <id>https://winghr.i0x0.cn/post/sctf_2016/</id>
-        <link href="https://winghr.i0x0.cn/post/sctf_2016/">
+        <id>https://meowketer.github.io/post/sctf_2016/</id>
+        <link href="https://meowketer.github.io/post/sctf_2016/">
         </link>
         <updated>2019-12-08T15:40:02.000Z</updated>
         <content type="html"><![CDATA[<h2 id="这是一个简单栈溢出-binary-同时整理">这是一个简单栈溢出 binary ，同时整理</h2>
 <p>字符串所在空间偏移大小的分析过程</p>
 <p>由于对汇编掌握还不够深入，及时对知识点总结就比较重要了。</p>
 <p><strong>0x1 运行 binary 查看基本流程及保护</strong><br>
-<img src="https://winghr.i0x0.cn/post-images/1584978068729.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1584978068729.png" alt="" loading="lazy"><br>
 binary 是 32 位的 ELF 文件，保护只开启了 NX，流程来看大概是输入一个字符出会反回你输入的内容。在结合随后的静态分析发现当输入''I 时会返回'you'。。<br>
-<img src="https://winghr.i0x0.cn/post-images/1584978079600.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1584978079600.png" alt="" loading="lazy"><br>
 与此同时发现使用 fgets 函数接收字符串儿时限制的输入长度最大为 32 以内。</p>
 <p><strong>0x2 分析输入字符串在栈中的偏移</strong><br>
 这里先使用 ida 查看程序功能模块所在的代码段：<br>
-<img src="https://winghr.i0x0.cn/post-images/1584978090458.png" alt="" loading="lazy"></p>
+<img src="https://meowketer.github.io/post-images/1584978090458.png" alt="" loading="lazy"></p>
 <p>在这里可以看到输入的字符串是通过相对于 esp 的索引，需要进行调试，将断点下在_fgets call 处。接下来使用 gdb 动态调试：<br>
-<img src="https://winghr.i0x0.cn/post-images/1584978122498.png" alt="" loading="lazy"></p>
+<img src="https://meowketer.github.io/post-images/1584978122498.png" alt="" loading="lazy"></p>
 <p>流程是先下断 b* 0x080491d9 ---&gt; 运行程序 r ---&gt; 单步至输入字符串。  过程中进行分析。<br>
 在这里，lea eax, [ebp - 0x3c] 是把 ebp - 0x3c 这个地址里面保存的内容拿出来给 eax<br>
 mov dword ptr [esp], eax  是把 eax 里面的内容拿出来给 esp 指向的地址<br>
@@ -192,18 +192,18 @@ mov dword ptr [esp], eax  是把 eax 里面的内容拿出来给 esp 指向的�
 <p><strong>0x3 构造溢出完成系统调用</strong><br>
 在最初的静态分析中注意到 fgets 函数限制了输入长度为 32 以内，显然不足以覆盖 64 个字符长度。但是程序只有这一个交互点。<br>
 这里可以利用输入字符串'I'程序转化为'you'这个条件来为我们构造出来足够长度的字符串儿 。因此构造'I'*21 在程序中相当于输入了 63 个字符。在加一个字符即可完成 64 位长度的覆盖。<br>
-<img src="https://winghr.i0x0.cn/post-images/1584978131488.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1584978131488.png" alt="" loading="lazy"><br>
 在程序段可以找到系统指令调用地址。因而完成溢出后跳转这个地址即可。</p>
 <p><strong>0x4 EXP</strong><br>
-<img src="https://winghr.i0x0.cn/post-images/1584978164074.png" alt="" loading="lazy"></p>
-<figure data-type="image" tabindex="1"><img src="https://winghr.i0x0.cn/post-images/1584978147689.png" alt="" loading="lazy"></figure>
+<img src="https://meowketer.github.io/post-images/1584978164074.png" alt="" loading="lazy"></p>
+<figure data-type="image" tabindex="1"><img src="https://meowketer.github.io/post-images/1584978147689.png" alt="" loading="lazy"></figure>
 <p>如有错误请多包涵 ❤️</p>
 ]]></content>
     </entry>
     <entry>
         <title type="html"><![CDATA[XCTF-pwn-stack2 - Writeup]]></title>
-        <id>https://winghr.i0x0.cn/post/pwn1-writeup/</id>
-        <link href="https://winghr.i0x0.cn/post/pwn1-writeup/">
+        <id>https://meowketer.github.io/post/pwn1-writeup/</id>
+        <link href="https://meowketer.github.io/post/pwn1-writeup/">
         </link>
         <updated>2019-11-28T14:35:55.000Z</updated>
         <content type="html"><![CDATA[<h3 id="偶尔在学习的阶段慢慢发现的进步-抽空写点笔记记录一下子">偶尔在学习的阶段慢慢发现的进步 抽空写点笔记记录一下子</h3>
@@ -237,8 +237,8 @@ sh所在的地址位0x8048980 + 7 （空过前面的/bin/ba 读取sh）<br>
     </entry>
     <entry>
         <title type="html"><![CDATA[过去的一个月干了些啥？]]></title>
-        <id>https://winghr.i0x0.cn/post/life1/</id>
-        <link href="https://winghr.i0x0.cn/post/life1/">
+        <id>https://meowketer.github.io/post/life1/</id>
+        <link href="https://meowketer.github.io/post/life1/">
         </link>
         <updated>2019-10-29T14:30:07.000Z</updated>
         <content type="html"><![CDATA[<h2 id="正如标题所讲的在过去一个月或许更久一点的时间当中相对于我个人来讲是比较忙碌的-">正如标题所讲的，在过去一个月或许更久一点的时间当中相对于我个人来讲是比较忙碌的----<br>
@@ -275,8 +275,8 @@ sh所在的地址位0x8048980 + 7 （空过前面的/bin/ba 读取sh）<br>
     </entry>
     <entry>
         <title type="html"><![CDATA[关于安装pwn环境~]]></title>
-        <id>https://winghr.i0x0.cn/post/pwnhj/</id>
-        <link href="https://winghr.i0x0.cn/post/pwnhj/">
+        <id>https://meowketer.github.io/post/pwnhj/</id>
+        <link href="https://meowketer.github.io/post/pwnhj/">
         </link>
         <updated>2019-09-15T14:24:05.000Z</updated>
         <content type="html"><![CDATA[<h2 id="第一步pwntools的安装">第一步pwntools的安装</h2>
@@ -326,8 +326,8 @@ make install
     </entry>
     <entry>
         <title type="html"><![CDATA[编程学习基础－－进制学习笔记整理（下）]]></title>
-        <id>https://winghr.i0x0.cn/post/jinzhixia/</id>
-        <link href="https://winghr.i0x0.cn/post/jinzhixia/">
+        <id>https://meowketer.github.io/post/jinzhixia/</id>
+        <link href="https://meowketer.github.io/post/jinzhixia/">
         </link>
         <updated>2019-08-08T14:18:29.000Z</updated>
         <content type="html"><![CDATA[<h1 id="五原码反码补码">五.原码反码补码</h1>
@@ -436,8 +436,8 @@ printf(&quot;%d\n,a&gt;&gt;2&quot;);</p>
     </entry>
     <entry>
         <title type="html"><![CDATA[编程学习基础－－进制学习笔记整理（上）]]></title>
-        <id>https://winghr.i0x0.cn/post/jinzhishang/</id>
-        <link href="https://winghr.i0x0.cn/post/jinzhishang/">
+        <id>https://meowketer.github.io/post/jinzhishang/</id>
+        <link href="https://meowketer.github.io/post/jinzhishang/">
         </link>
         <updated>2019-08-04T14:15:04.000Z</updated>
         <content type="html"><![CDATA[<h1 id="关于笔记">关于笔记</h1>
@@ -505,8 +505,8 @@ printf(&quot;%d\n,a&gt;&gt;2&quot;);</p>
     </entry>
     <entry>
         <title type="html"><![CDATA[写博客：记录，分享&收获]]></title>
-        <id>https://winghr.i0x0.cn/post/xie-bo-ke-ji-lu-fen-xiang-andshou-huo/</id>
-        <link href="https://winghr.i0x0.cn/post/xie-bo-ke-ji-lu-fen-xiang-andshou-huo/">
+        <id>https://meowketer.github.io/post/xie-bo-ke-ji-lu-fen-xiang-andshou-huo/</id>
+        <link href="https://meowketer.github.io/post/xie-bo-ke-ji-lu-fen-xiang-andshou-huo/">
         </link>
         <updated>2019-07-28T16:09:41.000Z</updated>
         <content type="html"><![CDATA[<p><ul class="markdownIt-TOC">

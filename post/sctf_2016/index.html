@@ -8,7 +8,7 @@
 <meta HTTP-EQUIV="expires" CONTENT="0"> 
 <title>sctf_2016 | Winghr&#39;s Blog</title>	
 
-<link rel="stylesheet" href="https://winghr.i0x0.cn/styles/main.css">
+<link rel="stylesheet" href="https://meowketer.github.io/styles/main.css">
 <script type="text/javascript">
 function getCSS()
 {
@@ -17,13 +17,13 @@ function getCSS()
         datetoday.setTime(timenow);
         thehour = datetoday.getHours();
 
-            display = "https://winghr.i0x0.cn/media/css/night.css";
+            display = "https://meowketer.github.io/media/css/night.css";
 
-            display = "https://winghr.i0x0.cn/media/css/night.css";   
+            display = "https://meowketer.github.io/media/css/night.css";   
       
-            display = "https://winghr.i0x0.cn/media/css/day.css";
+            display = "https://meowketer.github.io/media/css/day.css";
 
-            display = "https://winghr.i0x0.cn/media/css/day.css";
+            display = "https://meowketer.github.io/media/css/day.css";
       
 
 var css = '<';
@@ -36,7 +36,7 @@ var css = '<';
 <link href="https://at.alicdn.com/t/font_1306644_jwtuc2zzbrd.css" rel="stylesheet" />
 <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
-<script type='text/javascript' src='https://winghr.i0x0.cn/media/scripts/script.js'></script>
+<script type='text/javascript' src='https://meowketer.github.io/media/scripts/script.js'></script>
 <link href="https://cdn.bootcss.com/animate.css/3.5.2/animate.min.css" rel="stylesheet" />
   <script src="https://cdn.bootcss.com/wow/1.1.2/wow.min.js"></script>
   <script src="https://cdn.bootcss.com/highlight.js/9.15.8/highlight.min.js"></script>
@@ -58,7 +58,7 @@ window.onload=getCSS();
 		
 		>
 			<div class="site-branding">
-									<h1 class="site-title"><a href="https://winghr.i0x0.cn" rel="home">Winghr&#39;s Blog</a></h1>
+									<h1 class="site-title"><a href="https://meowketer.github.io" rel="home">Winghr&#39;s Blog</a></h1>
 										
 					<h2 class="site-description">十日画一水，五日画一圆。</h2>
 										
@@ -157,15 +157,15 @@ window.onload=getCSS();
 <p>字符串所在空间偏移大小的分析过程</p>
 <p>由于对汇编掌握还不够深入，及时对知识点总结就比较重要了。</p>
 <p><strong>0x1 运行 binary 查看基本流程及保护</strong><br>
-<img src="https://winghr.i0x0.cn/post-images/1584978068729.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1584978068729.png" alt="" loading="lazy"><br>
 binary 是 32 位的 ELF 文件，保护只开启了 NX，流程来看大概是输入一个字符出会反回你输入的内容。在结合随后的静态分析发现当输入''I 时会返回'you'。。<br>
-<img src="https://winghr.i0x0.cn/post-images/1584978079600.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1584978079600.png" alt="" loading="lazy"><br>
 与此同时发现使用 fgets 函数接收字符串儿时限制的输入长度最大为 32 以内。</p>
 <p><strong>0x2 分析输入字符串在栈中的偏移</strong><br>
 这里先使用 ida 查看程序功能模块所在的代码段：<br>
-<img src="https://winghr.i0x0.cn/post-images/1584978090458.png" alt="" loading="lazy"></p>
+<img src="https://meowketer.github.io/post-images/1584978090458.png" alt="" loading="lazy"></p>
 <p>在这里可以看到输入的字符串是通过相对于 esp 的索引，需要进行调试，将断点下在_fgets call 处。接下来使用 gdb 动态调试：<br>
-<img src="https://winghr.i0x0.cn/post-images/1584978122498.png" alt="" loading="lazy"></p>
+<img src="https://meowketer.github.io/post-images/1584978122498.png" alt="" loading="lazy"></p>
 <p>流程是先下断 b* 0x080491d9 ---&gt; 运行程序 r ---&gt; 单步至输入字符串。  过程中进行分析。<br>
 在这里，lea eax, [ebp - 0x3c] 是把 ebp - 0x3c 这个地址里面保存的内容拿出来给 eax<br>
 mov dword ptr [esp], eax  是把 eax 里面的内容拿出来给 esp 指向的地址<br>
@@ -174,32 +174,32 @@ mov dword ptr [esp], eax  是把 eax 里面的内容拿出来给 esp 指向的�
 <p><strong>0x3 构造溢出完成系统调用</strong><br>
 在最初的静态分析中注意到 fgets 函数限制了输入长度为 32 以内，显然不足以覆盖 64 个字符长度。但是程序只有这一个交互点。<br>
 这里可以利用输入字符串'I'程序转化为'you'这个条件来为我们构造出来足够长度的字符串儿 。因此构造'I'*21 在程序中相当于输入了 63 个字符。在加一个字符即可完成 64 位长度的覆盖。<br>
-<img src="https://winghr.i0x0.cn/post-images/1584978131488.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1584978131488.png" alt="" loading="lazy"><br>
 在程序段可以找到系统指令调用地址。因而完成溢出后跳转这个地址即可。</p>
 <p><strong>0x4 EXP</strong><br>
-<img src="https://winghr.i0x0.cn/post-images/1584978164074.png" alt="" loading="lazy"></p>
-<figure data-type="image" tabindex="1"><img src="https://winghr.i0x0.cn/post-images/1584978147689.png" alt="" loading="lazy"></figure>
+<img src="https://meowketer.github.io/post-images/1584978164074.png" alt="" loading="lazy"></p>
+<figure data-type="image" tabindex="1"><img src="https://meowketer.github.io/post-images/1584978147689.png" alt="" loading="lazy"></figure>
 <p>如有错误请多包涵 ❤️</p>
 
 							</div>
 	<div class="wow bounceInDown vt-post-tags">
  
-				<a href="https://winghr.i0x0.cn/tag/H5tJBBzum/" rel="tag">CTF</a>	
+				<a href="https://meowketer.github.io/tag/H5tJBBzum/" rel="tag">CTF</a>	
 				 
 					</div>						
 <nav class="navigation3 post-navigation3" role="navigation">
 		
 		<div class="nav-links3">
       
-		<div class="wow bounceInLeft nav-previous3"><a href="https://winghr.i0x0.cn/post/test/" rel="prev"> Test</a></div>
+		<div class="wow bounceInLeft nav-previous3"><a href="https://meowketer.github.io/post/test/" rel="prev"> Test</a></div>
 		 
 		 
-		<div class="wow bounceInRight nav-next3"><a href="https://winghr.i0x0.cn/post/pwn1-writeup/" rel="next"> XCTF-pwn-stack2 - Writeup</a></div>
+		<div class="wow bounceInRight nav-next3"><a href="https://meowketer.github.io/post/pwn1-writeup/" rel="next"> XCTF-pwn-stack2 - Writeup</a></div>
 		
 		</div>
 	</nav>
 	<div class="wow rollIn author-info" style="visibility: visible; animation-name: rollIn;">
-	<div class="author-avatar pull-left"><img src="https://winghr.i0x0.cn/images/avatar.png" ></div>
+	<div class="author-avatar pull-left"><img src="https://meowketer.github.io/images/avatar.png" ></div>
  
 
 		</div>
@@ -234,7 +234,7 @@ var dsqjs = new DisqusJS(options)
           
         
 		<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-<script src='https://winghr.i0x0.cn/media/scripts/Valine.min.js'></script>
+<script src='https://meowketer.github.io/media/scripts/Valine.min.js'></script>
 
 <div class="comment"></div>
 <script>
@@ -336,7 +336,7 @@ var dsqjs = new DisqusJS(options)
 </div>
 
 <script src="https://cdn.bootcss.com/fitvids/1.2.0/jquery.fitvids.min.js"></script>
-<script type='text/javascript' src='https://winghr.i0x0.cn/media/scripts/marlin-scripts.js'></script>
+<script type='text/javascript' src='https://meowketer.github.io/media/scripts/marlin-scripts.js'></script>
  <script src="//tokinx.github.io/lately/lately.min.js"></script>
   <script>jQuery(document).ready(function(){$.lately({'target':'.lately-a,.lately-b,.lately-c'})});</script>
   <style type="text/css">a.back_to_top {
