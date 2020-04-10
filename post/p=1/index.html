@@ -8,7 +8,7 @@
 <meta HTTP-EQUIV="expires" CONTENT="0"> 
 <title>有关ret2libc利用方法的整理 | Winghr&#39;s Blog</title>	
 
-<link rel="stylesheet" href="https://meowketer.github.io/styles/main.css">
+<link rel="stylesheet" href="https://winghr.i0x0.cn//styles/main.css">
 <script type="text/javascript">
 function getCSS()
 {
@@ -17,13 +17,13 @@ function getCSS()
         datetoday.setTime(timenow);
         thehour = datetoday.getHours();
 
-            display = "https://meowketer.github.io/media/css/night.css";
+            display = "https://winghr.i0x0.cn//media/css/night.css";
 
-            display = "https://meowketer.github.io/media/css/night.css";   
+            display = "https://winghr.i0x0.cn//media/css/night.css";   
       
-            display = "https://meowketer.github.io/media/css/day.css";
+            display = "https://winghr.i0x0.cn//media/css/day.css";
 
-            display = "https://meowketer.github.io/media/css/day.css";
+            display = "https://winghr.i0x0.cn//media/css/day.css";
       
 
 var css = '<';
@@ -36,7 +36,7 @@ var css = '<';
 <link href="https://at.alicdn.com/t/font_1306644_jwtuc2zzbrd.css" rel="stylesheet" />
 <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
-<script type='text/javascript' src='https://meowketer.github.io/media/scripts/script.js'></script>
+<script type='text/javascript' src='https://winghr.i0x0.cn//media/scripts/script.js'></script>
 <link href="https://cdn.bootcss.com/animate.css/3.5.2/animate.min.css" rel="stylesheet" />
   <script src="https://cdn.bootcss.com/wow/1.1.2/wow.min.js"></script>
   <script src="https://cdn.bootcss.com/highlight.js/9.15.8/highlight.min.js"></script>
@@ -58,7 +58,7 @@ window.onload=getCSS();
 		
 		>
 			<div class="site-branding">
-									<h1 class="site-title"><a href="https://meowketer.github.io" rel="home">Winghr&#39;s Blog</a></h1>
+									<h1 class="site-title"><a href="https://winghr.i0x0.cn/" rel="home">Winghr&#39;s Blog</a></h1>
 										
 					<h2 class="site-description">十日画一水，五日画一圆。</h2>
 										
@@ -163,18 +163,18 @@ window.onload=getCSS();
 1、用来存放外部函数地址的数据段<br>
 2、用来获取数据段记录的外部函数地址的代码<br>
 对应有两个表，一个用来存放外部的函数地址的数据表称为全局偏移表（GOT, Global Offset Table），那个存放额外代码的表称为程序链接表（PLT，Procedure Link Table）<br>
-<img src="https://meowketer.github.io/post-images/1585232895786.jpeg" alt="" loading="lazy"><br>
+<img src="https://winghr.i0x0.cn//post-images/1585232895786.jpeg" alt="" loading="lazy"><br>
 可执行文件里面保存的是 PLT 表的地址，对应 PLT 地址指向的是 GOT 的地址，GOT 表指向的就是 glibc 中的地址<br>
 那我们可以发现，在这里面想要通过 plt 表获取函数的地址，首先要保证 got 表已经获取了正确的地址，但是在一开始就进行所有函数的重定位是比较麻烦的，为此，linux 引入了延迟绑定机制</p>
 <h3 id="延迟绑定机制">延迟绑定机制</h3>
 <p>只有动态库函数在被调用时，才会地址解析和重定位工作。简单来讲，在一个binary运行的过程中，只有真正运行过的函数才真正被调用真实地址运行。当一个功能模块未被加载使用的时候，比如准备调用一个函数，会通过先在PLT表找到记录相对的GOT表项的内容，即可跳转真实地址运行调用函数。也就是所谓的地址解析和重定位。</p>
 <h2 id="一个实例">一个实例</h2>
 <p>在上面整理了相关的理论原理，通过下面的这道题目来对应实践上述内容。这个binary来自BUUOJ的ciscn_2019_c_1难度不大，刚刚好是re2libc的利用漏洞。<br>
-<img src="https://meowketer.github.io/post-images/1585234609391.png" alt="" loading="lazy"><br>
+<img src="https://winghr.i0x0.cn//post-images/1585234609391.png" alt="" loading="lazy"><br>
 程序根据不同的选项有不同的功能，载入ida中查看一下：<br>
-<img src="https://meowketer.github.io/post-images/1585234863292.png" alt="" loading="lazy"><br>
+<img src="https://winghr.i0x0.cn//post-images/1585234863292.png" alt="" loading="lazy"><br>
 可以看到在encrypt函数内存在栈溢出漏洞。对应程序的功能选项则为1选项。<br>
-<img src="https://meowketer.github.io/post-images/1585235183513.png" alt="" loading="lazy"><br>
+<img src="https://winghr.i0x0.cn//post-images/1585235183513.png" alt="" loading="lazy"><br>
 但是这里的算法会将我们输入的内容加密处理，这样我们构造payload时就无法直接实现我们攻击流程。所以第一步需要对这个算法进行处理。在这个算法中注意到strlen函数，这个函数的主要特性如下：strlen所作的是一个计数器的工作，它从内存的某个位置（可以是字符串开头，中间某个位置，甚至是某个不确定的内存区域）开始扫描，直到碰到第一个字符串结束符'\0'为止，然后返回计数器值(长度不包含'\0')。因此在这里我们只需要在payload开始的部分加入'\0'字符即可完成绕过。<br>
 还有一个需要注意的点就是，程序远程运行在乌班图18.04的环境下，因此在构造系统调用时需要使用ret先对齐。</p>
 <h2 id="利用思路">利用思路</h2>
@@ -240,15 +240,15 @@ io.interactive()
 		
 		<div class="nav-links3">
       
-		<div class="wow bounceInLeft nav-previous3"><a href="https://meowketer.github.io/post/not_the_same_3dsctf_2016_wp/" rel="prev"> not_the_same_3dsctf_2016_WP</a></div>
+		<div class="wow bounceInLeft nav-previous3"><a href="https://winghr.i0x0.cn/post/not_the_same_3dsctf_2016_wp/" rel="prev"> not_the_same_3dsctf_2016_WP</a></div>
 		 
 		 
-		<div class="wow bounceInRight nav-next3"><a href="https://meowketer.github.io/post/shellcode/" rel="next"> shellcode相关知识整理</a></div>
+		<div class="wow bounceInRight nav-next3"><a href="https://winghr.i0x0.cn/post/shellcode/" rel="next"> shellcode相关知识整理</a></div>
 		
 		</div>
 	</nav>
 	<div class="wow rollIn author-info" style="visibility: visible; animation-name: rollIn;">
-	<div class="author-avatar pull-left"><img src="https://meowketer.github.io/images/avatar.png" ></div>
+	<div class="author-avatar pull-left"><img src="https://winghr.i0x0.cn//images/avatar.png" ></div>
  
 
 		</div>
@@ -283,7 +283,7 @@ var dsqjs = new DisqusJS(options)
           
         
 		<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-<script src='https://meowketer.github.io/media/scripts/Valine.min.js'></script>
+<script src='https://winghr.i0x0.cn//media/scripts/Valine.min.js'></script>
 
 <div class="comment"></div>
 <script>
@@ -385,7 +385,7 @@ var dsqjs = new DisqusJS(options)
 </div>
 
 <script src="https://cdn.bootcss.com/fitvids/1.2.0/jquery.fitvids.min.js"></script>
-<script type='text/javascript' src='https://meowketer.github.io/media/scripts/marlin-scripts.js'></script>
+<script type='text/javascript' src='https://winghr.i0x0.cn//media/scripts/marlin-scripts.js'></script>
  <script src="//tokinx.github.io/lately/lately.min.js"></script>
   <script>jQuery(document).ready(function(){$.lately({'target':'.lately-a,.lately-b,.lately-c'})});</script>
   <style type="text/css">a.back_to_top {
