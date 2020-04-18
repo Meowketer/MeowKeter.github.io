@@ -6,7 +6,7 @@
 <meta HTTP-EQUIV="pragma" CONTENT="no-cache"> 
 <meta HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
 <meta HTTP-EQUIV="expires" CONTENT="0"> 
-<title>写博客：记录，分享&amp;收获 | Winghr&#39;s Blog</title>	
+<title>angr符号执行 | Winghr&#39;s Blog</title>	
 
 <link rel="stylesheet" href="https://winghr.i0x0.cn/styles/main.css">
 <script type="text/javascript">
@@ -142,10 +142,10 @@ window.onload=getCSS();
 	
 	                      
 		<div class="entry-content">
-			<h1 class="wow swing entry-title">写博客：记录，分享&amp;收获</h1>
+			<h1 class="wow swing entry-title">angr符号执行</h1>
 <div class="entry-meta">
 <div class="wow bounce">
-	<i class="iconfont icon-rili"> <time class="lately-a" datetime="2019-07-29 00:09:41" itemprop="datePublished" pubdate="">2019-07-29</time></i>
+	<i class="iconfont icon-rili"> <time class="lately-a" datetime="2020-04-18 16:19:56" itemprop="datePublished" pubdate="">2020-04-18</time></i>
 	          </div>
 			
 </span>
@@ -153,52 +153,73 @@ window.onload=getCSS();
 		</div>
                   
 			<div class="wow slideInLeft entry-summary song">
-				<p><ul class="markdownIt-TOC">
-<li><a href="#%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2">第一篇博客</a>
+				<h1 id="angr初识">angr初识</h1>
+<p>第一次见到angr是通过一位师傅分享过的一个GitHub上的开源项目，在安装使用的过程中，在一个相同的地方频频报错，出问题的点便是angr模块。师傅的博客中也有整理过两篇angr的文章，看过之后也对angr有了初步的认识。</p>
+<h2 id="angr初探">angr初探</h2>
+<p>angr是一个基于python的二进制程序的分析框架，它结合了静态和动态的符号分析。它的适用性很好，官方文档对它的描述如下：目前，angr是最强大的二进制分析框架之一。支持x86、ARM、MIPS和PPC的32位和64位变体，并提供一系列静态分析和强大的符号执行引擎。这使得angr可以用作自动ROP生成器、二进制修补引擎、下一代fuzzer、自动开发引擎和其他现有工具的基础。</p>
+<h2 id="符号执行">符号执行</h2>
+<p>这是angr中非常核心的一个部分。它包含如下等方法：</p>
 <ul>
-<li><a href="#%E5%85%B3%E4%BA%8E%E6%88%91">关于我</a></li>
-<li><a href="#%E9%80%89%E6%8B%A9">选择</a></li>
-<li><a href="#%E6%88%91%E7%9A%84%E5%8D%9A%E5%AE%A2">我的博客</a></li>
+<li>路径选择</li>
+<li>约束求解</li>
+<li>内存建模</li>
+<li>处理并发<br>
+随后会慢慢对这几部分功能进行探究。在这里先整体概括理解一下符号执行的含义：<br>
+例如在我们想要分析一个输入输出程序的情景下，输出的点有正确与不正确两种情况。如果我们需要得到正确的输入内容，则在不知道输入字符类型、长度等情况时。符号执行的作用便体现于此。在这里符号执行就类似于以一种变量的形式输入到程序流程中，这个变量就是类似于数学方程的约束条件，将约束的条件在执行路径中求解，我们所期望的正确值便能够得到。</li>
 </ul>
-</li>
-</ul>
-(对待博客的认识&amp;准备)</p>
-<h1 id="第一篇博客">第一篇博客</h1>
-<p>在这之前我从来没有认真写过博客，对于博客虽然很早就有听说过，但是对它的概念一直很模糊。</p>
-<p>直到前不久，我意识到无论是在生活中还是在学习技术的过程中，有太多的想法与细节需要放到一个地方做总结与整合。它的作用不仅仅只是记录。更多的是一种分享，尤其是技术方面而言。在我学习的过程中查阅过的大量资料，这便是有过前车之鉴的朋友们所做的知识整合与分享。</p>
-<p>如果有人问我为什么也要准备开始分享自己花费不少时间一点点摸索一点点积累的一些知识呢？我会毫不犹豫的回答到，在我学习的过程中本就是借鉴了其他人大量的分享，正因为有着许多人共同的分享，才使得相关领域的技术以及知识不断的向前更新迈步。也正因为我们踩着巨人的肩膀所以我们一直有收获与进步~</p>
-<p>所以，博客便是这样一个记录与分享的平台。我的分享与记录也便从此开始~<br>
-开始慢慢的写文章（虽然没有啥文笔可言）开始点滴记录我所走过的坑（虽然技术菜的一批）开始分享我的经验（虽然现在一点经验都没有）开始追逐大佬们的步伐（这个是真的诶！！）</p>
-<h2 id="关于我">关于我</h2>
-<p>大家好，我是Winghr</p>
-<hr>
-<p>关于我<br>
-大概在四五年前第一次接触到黑客这样的名词，，感觉什么远控啊，攻击其他人的网站啊还有满屏的五颜六色的代码啊啥的感觉太帅惹~~~（现在想想真的好沙雕）</p>
-<p>但由于当时只是好奇、加上学业繁重，，并没有形成多浓厚的兴趣便一直处于好奇的阶段，在两年前的一天把好奇转为了兴趣，于是慢慢踏入了信息安全的大门，在两年的时间内没有啥方向一直就是这儿学点儿那学点儿的，虽然了解了很多但是没有啥精通一点的东东。</p>
-<p>后来有幸认识了一个相关行业的导师跟他交流了很多，了解到在信息安全领域中，像是我这样前期找不到方向便去多方面的“但当涉猎”也是有好处滴，因为信息安全的领域很大要学习和努力的地方本就很多。so.在找到一个确切方向之前我还是会学习很多知识，尤其是最基础的一些东东。</p>
-<h2 id="选择">选择</h2>
-<p>在一个月前我慢慢发现我对于很多知识点的整理与积累不够系统，有些知识的整合例如CTF练习题的wp放在了文件夹中，有些像是二进制汇编等知识的学习笔记放在了jupyter笔记本中，也有一些文章写在了一些论坛中。</p>
-<p>有看过很多大佬写的关于博客的文章，例如：为什么要写博客，，，写博客的种种好处。。。。嗯，，说的很对，让我有好多的收获。<br>
-总结来讲就是记录，分享以及收获~</p>
-<p>记录一些好的点子以及技术细节，分享你的经验与研究成果，收获一份意义与价值。</p>
-<h2 id="我的博客">我的博客</h2>
-<p>在写这些文章的过程，我会经历回顾整理知识的阶段，能在中国阶段中获得对知识巩固与更深的理解。这本是一种收获。<br>
-如果我的分享能给他人带来一些帮助，解决一些问题，我的这份分享便也会有一份意义咯，这也是一份沉淀的收获把~</p>
-<p>所以即便我的博客没有一个人看，我也会坚持去写，，因为总有一天会通过这一点点的积累收获很多很多~</p>
+<h2 id="安装angr">安装angr</h2>
+<p>angr最好安装到虚拟环境当中，使用虚拟环境的主要原因是angr会修改libz3和libVEX等模块，可能会影响其他程序的正常使用。可以将其安装到python虚拟环境中或是docker中。我选用的是virtualenv。</p>
+<pre><code>$ mkvirtualenv angr
+$ pip install angr
+</code></pre>
+<p>使用时workon angr 即可。<br>
+ipython也常会用到 在angr环境下安装即可 <code>pip install ipython</code></p>
+<h2 id="一个实例">一个实例</h2>
+<p>这里采用angr-doc-master中的一个比较典型且简单的例子才测试一下angr符号执行的情况<br>
+<img src="https://winghr.i0x0.cn/post-images/1587227823709.png" alt="" loading="lazy"><br>
+在这里可以看到，这个程序就是让输入一个字符串参数，然后验证这个参数是否是正确的。<br>
+通常情况下若需要完成正确参数的求解需要对其算法进行逆运算，下图则为具体算法：<br>
+<img src="https://winghr.i0x0.cn/post-images/1587227837802.png" alt="" loading="lazy"><br>
+显然可以到还是比较麻烦的（至少我觉得手动完成逆运算还是挺麻烦的）那么在这样的场景下angr的作用就比较明显了：我们观察到有两种不同的参数验证结果，需要留意下这两段地址：<br>
+<img src="https://winghr.i0x0.cn/post-images/1587227848359.png" alt="" loading="lazy"><br>
+显然我们想要去到的是左侧的正确结果的输出流程。那么接下来就需要模拟一个变量去到这个正确路径从而求解正确的结果。<br>
+具体步骤：<br>
+<code>project = angr.Project(&quot;./ais3_crackme&quot;)</code><br>
+将程序的二进制代码转化为angr特有的一种代码形式解释加载进来。<br>
+<code>argv1 = claripy.BVS(&quot;argv1&quot;,100*8)</code><br>
+定以变量字符，也就是待求的变量定义，需要import claripy 这个库，100长度以内的字符。<br>
+<code>initial_state = project.factory.entry_state(args=[&quot;./crackme1&quot;,argv1])</code><br>
+寻找程序的入口点（常为0x40000）入口点entry_state需要输入的参数就是上一行构造的变量，完成后返回给initial_state一个初始化状态。<br>
+<code>sm = project.factory.simulation_manager(initial_state)</code><br>
+将状态参数转化为一个对象赋给sm,建立此对象的目的便是能够求解规划路线的一个方法<br>
+<code>sm.explore(find=0x400602,avoid=0x40060E)</code><br>
+求解的约束条件<br>
+<code>found = sm.found[0]</code><br>
+找到相应的路径<br>
+<code>solution = found.solver.eval(argv1, cast_to=bytes)</code><br>
+求解变量值<br>
+<code>return solution</code><br>
+反回变量<br>
+输出求解值：</p>
+<pre><code>  print(repr(solution))
+    solution = solution[:solution.find(b&quot;\x00&quot;)]
+    print(solution)
+</code></pre>
+<p>运行结果：<br>
+<img src="https://winghr.i0x0.cn/post-images/1587227193292.png" alt="" loading="lazy"><br>
+成功得到正确的解，过程也只用了几秒钟，比手动逆向速度快了很多。由此可见angr在一些方面作用确实有独到之处。</p>
 
 							</div>
 	<div class="wow bounceInDown vt-post-tags">
  
-				<a href="https://winghr.i0x0.cn/tag/fBtHb5Xc_/" rel="tag">旧文章</a>	
-				 
 					</div>						
 <nav class="navigation3 post-navigation3" role="navigation">
 		
 		<div class="nav-links3">
       
-		<div class="wow bounceInLeft nav-previous3"><a href="https://winghr.i0x0.cn/post/jinzhishang/" rel="prev"> 编程学习基础－－进制学习笔记整理（上）</a></div>
 		 
-		 
+		<div class="wow bounceInRight nav-next3"><a href="https://winghr.i0x0.cn/post/buu3/" rel="next"> BUU-Pwn遇到的两道小坑</a></div>
+		
 		</div>
 	</nav>
 	<div class="wow rollIn author-info" style="visibility: visible; animation-name: rollIn;">

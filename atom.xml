@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://winghr.i0x0.cn</id>
     <title>Winghr&apos;s Blog</title>
-    <updated>2020-04-10T14:04:50.609Z</updated>
+    <updated>2020-04-18T16:43:34.873Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://winghr.i0x0.cn"/>
     <link rel="self" href="https://winghr.i0x0.cn/atom.xml"/>
@@ -10,6 +10,69 @@
     <logo>https://winghr.i0x0.cn/images/avatar.png</logo>
     <icon>https://winghr.i0x0.cn/favicon.ico</icon>
     <rights>All rights reserved 2020, Winghr&apos;s Blog</rights>
+    <entry>
+        <title type="html"><![CDATA[angr符号执行]]></title>
+        <id>https://winghr.i0x0.cn/post/angr1/</id>
+        <link href="https://winghr.i0x0.cn/post/angr1/">
+        </link>
+        <updated>2020-04-18T08:19:56.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="angr初识">angr初识</h1>
+<p>第一次见到angr是通过一位师傅分享过的一个GitHub上的开源项目，在安装使用的过程中，在一个相同的地方频频报错，出问题的点便是angr模块。师傅的博客中也有整理过两篇angr的文章，看过之后也对angr有了初步的认识。</p>
+<h2 id="angr初探">angr初探</h2>
+<p>angr是一个基于python的二进制程序的分析框架，它结合了静态和动态的符号分析。它的适用性很好，官方文档对它的描述如下：目前，angr是最强大的二进制分析框架之一。支持x86、ARM、MIPS和PPC的32位和64位变体，并提供一系列静态分析和强大的符号执行引擎。这使得angr可以用作自动ROP生成器、二进制修补引擎、下一代fuzzer、自动开发引擎和其他现有工具的基础。</p>
+<h2 id="符号执行">符号执行</h2>
+<p>这是angr中非常核心的一个部分。它包含如下等方法：</p>
+<ul>
+<li>路径选择</li>
+<li>约束求解</li>
+<li>内存建模</li>
+<li>处理并发<br>
+随后会慢慢对这几部分功能进行探究。在这里先整体概括理解一下符号执行的含义：<br>
+例如在我们想要分析一个输入输出程序的情景下，输出的点有正确与不正确两种情况。如果我们需要得到正确的输入内容，则在不知道输入字符类型、长度等情况时。符号执行的作用便体现于此。在这里符号执行就类似于以一种变量的形式输入到程序流程中，这个变量就是类似于数学方程的约束条件，将约束的条件在执行路径中求解，我们所期望的正确值便能够得到。</li>
+</ul>
+<h2 id="安装angr">安装angr</h2>
+<p>angr最好安装到虚拟环境当中，使用虚拟环境的主要原因是angr会修改libz3和libVEX等模块，可能会影响其他程序的正常使用。可以将其安装到python虚拟环境中或是docker中。我选用的是virtualenv。</p>
+<pre><code>$ mkvirtualenv angr
+$ pip install angr
+</code></pre>
+<p>使用时workon angr 即可。<br>
+ipython也常会用到 在angr环境下安装即可 <code>pip install ipython</code></p>
+<h2 id="一个实例">一个实例</h2>
+<p>这里采用angr-doc-master中的一个比较典型且简单的例子才测试一下angr符号执行的情况<br>
+<img src="https://winghr.i0x0.cn/post-images/1587227823709.png" alt="" loading="lazy"><br>
+在这里可以看到，这个程序就是让输入一个字符串参数，然后验证这个参数是否是正确的。<br>
+通常情况下若需要完成正确参数的求解需要对其算法进行逆运算，下图则为具体算法：<br>
+<img src="https://winghr.i0x0.cn/post-images/1587227837802.png" alt="" loading="lazy"><br>
+显然可以到还是比较麻烦的（至少我觉得手动完成逆运算还是挺麻烦的）那么在这样的场景下angr的作用就比较明显了：我们观察到有两种不同的参数验证结果，需要留意下这两段地址：<br>
+<img src="https://winghr.i0x0.cn/post-images/1587227848359.png" alt="" loading="lazy"><br>
+显然我们想要去到的是左侧的正确结果的输出流程。那么接下来就需要模拟一个变量去到这个正确路径从而求解正确的结果。<br>
+具体步骤：<br>
+<code>project = angr.Project(&quot;./ais3_crackme&quot;)</code><br>
+将程序的二进制代码转化为angr特有的一种代码形式解释加载进来。<br>
+<code>argv1 = claripy.BVS(&quot;argv1&quot;,100*8)</code><br>
+定以变量字符，也就是待求的变量定义，需要import claripy 这个库，100长度以内的字符。<br>
+<code>initial_state = project.factory.entry_state(args=[&quot;./crackme1&quot;,argv1])</code><br>
+寻找程序的入口点（常为0x40000）入口点entry_state需要输入的参数就是上一行构造的变量，完成后返回给initial_state一个初始化状态。<br>
+<code>sm = project.factory.simulation_manager(initial_state)</code><br>
+将状态参数转化为一个对象赋给sm,建立此对象的目的便是能够求解规划路线的一个方法<br>
+<code>sm.explore(find=0x400602,avoid=0x40060E)</code><br>
+求解的约束条件<br>
+<code>found = sm.found[0]</code><br>
+找到相应的路径<br>
+<code>solution = found.solver.eval(argv1, cast_to=bytes)</code><br>
+求解变量值<br>
+<code>return solution</code><br>
+反回变量<br>
+输出求解值：</p>
+<pre><code>  print(repr(solution))
+    solution = solution[:solution.find(b&quot;\x00&quot;)]
+    print(solution)
+</code></pre>
+<p>运行结果：<br>
+<img src="https://winghr.i0x0.cn/post-images/1587227193292.png" alt="" loading="lazy"><br>
+成功得到正确的解，过程也只用了几秒钟，比手动逆向速度快了很多。由此可见angr在一些方面作用确实有独到之处。</p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[BUU-Pwn遇到的两道小坑]]></title>
         <id>https://winghr.i0x0.cn/post/buu3/</id>
@@ -553,116 +616,6 @@ make install
 <p>装完就可以方便的调试了：<br>
 <img src="https://img-blog.csdnimg.cn/2019091514024848.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"><br>
 到此为止pwn的基本环境就差不多能用辽^_*</p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[编程学习基础－－进制学习笔记整理（下）]]></title>
-        <id>https://winghr.i0x0.cn/post/jinzhixia/</id>
-        <link href="https://winghr.i0x0.cn/post/jinzhixia/">
-        </link>
-        <updated>2019-08-08T14:18:29.000Z</updated>
-        <content type="html"><![CDATA[<h1 id="五原码反码补码">五.原码反码补码</h1>
-<h3 id="编码规则">编码规则</h3>
-<p>不同文件有不同的编码规则<br>
-11010101<br>
-无符号数当中0xD5 213 有符号数时并非-213</p>
-<p>正数的原码反码补码相同<br>
-表示： 1 00000001 6 00000110</p>
-<h3 id="正数的原码补码在计算机中的表示">正数的原码补码在计算机中的表示</h3>
-<pre><code>int main(int argc,char*argv[])
-{
-    char x = 1;             #用到的数据宽度为8位
-    printf(&quot;%x\n&quot;,&amp;x);   #打印一下这个值在内存中的位置
-    return 0;
-}
-
-</code></pre>
-<p>找到内存中的值搜索到address，找到对应的值位01 转化位二进制为00000001<br>
-所以正数在内存中存的就是当前这个数的原码。</p>
-<h3 id="负数的原码反码补码">负数的原码反码补码</h3>
-<p>Ⅰ.有符号数的编码规则<br>
-1原码 最高为为符号位，其余各位为数值的绝对值<br>
-2反码 正数的反码跟原码相同<br>
-负数：符号为为1，其余为对原码取反<br>
-3补码 正数的补码跟原码相同<br>
-负数：符号位为1，其余位为对原码取反加1<br>
-表示 -1 原码 10000001  反码11111110  补码 11111111<br>
-表示 -7 原码 10000111  反码11111000  补码 11111001</p>
-<pre><code>int main(int argc,char*argv[])
-{
-    char x = -1;              #用到的数据宽度为8位
-    printf(&quot;%x\n&quot;,&amp;x);     #打印一下这个值在内存中的位置
-    return 0;
-}`在这里插入代码片`在这里插入代码片
-</code></pre>
-<p>得出结论为-1在内存中的值为FF即<br>
-！！！负数在内存中以补码的形式中存在.</p>
-<h3 id="有无符号数区分表">有无符号数区分表</h3>
-<figure data-type="image" tabindex="1"><img src="https://img-blog.csdnimg.cn/20190808150643813.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21hY3JvX3dpbmc=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"></figure>
-<h1 id="六无符号有符号数">六.无符号有符号数</h1>
-<p>Ⅰ.无符号数的编码规则<br>
-这个数是多少就存多少<br>
-10011010 是一个无符号数的话则为0x9A  数的绝对值 只有正数<br>
-Ⅱ.有符号数的编码规则<br>
-有符号数最高为是0的话 这个数一定是个正数<br>
-有符号数最高为为1的话 这个数一定是一个负数<br>
-00011010 是1A<br>
-10011010 是</p>
-<pre><code>int main(int argc,char*argv[])
-{
-    int x = 0x1A000000;
-    printf(&quot;以无符号形式显示：%u\n&quot;,x);
-    printf(&quot;以有符号形式显示：%d\n&quot;,x);
-    return 0;
-}
-</code></pre>
-<p>以无符号形式显示：436207616<br>
-以有符号形式显示：436207616<br>
-则说明有符号数为正时与无符号形式的编码方式是一样的。</p>
-<pre><code> int main(int argc,char*argv[])
-{
-    int x = 0x9A000000;
-    printf(&quot;以无符号形式显示：%u\n&quot;,x);
-    printf(&quot;以有符号形式显示：%d\n&quot;,x);
-    return 0;
-}
-</code></pre>
-<p>以无符号形式显示：2583691264<br>
-以有符号形式显示：-1711276032<br>
-0x9A时  10011010<br>
--1,711,276,032‬<br>
-FFFF FFFF 9A00 0000‬<br>
-1111 1111 1111 1111 1111 1111 1111 1111 1001 1010 0000 0000 0000 0000 0000 0000‬</p>
-<h2 id="七计算机中的运算">七.计算机中的运算</h2>
-<p>运算<br>
-计算机只认识0和1，归根结底计算机就是对0和1做运算（通常成为位运算）<br>
-1 与运算<br>
-两个位都为1时结果才为1<br>
-1011 0001<br>
-and（＆）     1101 1000<br>
-1001 0000<br>
-2.或运算<br>
-只要有一个位为1就是1<br>
-1011 0001<br>
-or(|)        1101 1000<br>
-1111 1001<br>
-3.异或运算<br>
-不一样的时候是1<br>
-1011 0001<br>
-xor(^)       1101 1000<br>
-0110 1001<br>
-4.非运算<br>
-0就是1，1就是0<br>
-1101 1000<br>
-not（~）      0010 0111<br>
-5.左移<br>
-各二进位全部左移若干位，高为丢弃低位补零<br>
-sh(&lt;&lt;)   1101 1000 左移两位为：0110 0000<br>
-6.右移<br>
-sar 11010101 1111 0101<br>
-对应C语言（&gt;&gt;）<br>
-int a = 10;<br>
-printf(&quot;%d\n,a&gt;&gt;2&quot;);</p>
 ]]></content>
     </entry>
 </feed>
